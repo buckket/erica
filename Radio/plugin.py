@@ -141,10 +141,10 @@ class Radio(callbacks.Plugin):
 	def tracklist(self, irc, msg, args, num):
 		"""[<anzahl>]
 
-      Zeigt die letzten gespielten Tracks an. Ohne Parameter werden die
-      letzten 3 angezeigt.
-      """
-
+		Zeigt die letzten gespielten Tracks an. Ohne Parameter werden die
+		letzten 3 angezeigt.
+		"""
+		
 		tracks = []
 
 		if (num == None):
