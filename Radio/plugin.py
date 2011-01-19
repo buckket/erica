@@ -341,7 +341,7 @@ class Radio(callbacks.Plugin):
 			tmp = float(foreign) / float(sum)
 			tmp = tmp * 100
 			
-		reply =  u"%s || %s || %i%% Ausländer" % (mounts, ' | '.join(countries), int(tmp))
+		reply =  u"%s ][ %s ][ %i%% Ausländer ]" % (mounts, ' | '.join(countries), int(tmp))
 		irc.reply(reply.encode('utf-8'))
 		
 	def streams(self, irc, msg, args):
@@ -517,7 +517,7 @@ class Radio(callbacks.Plugin):
 
 		if ('listener' in data):
 			for stream in data['listener']:
-				s = data['listener'][stream]
+				s = stream
 
 				s['c'] = int(s['c'])
 
@@ -573,19 +573,19 @@ def formatListeners(data):
 	perStream = []
 
 	for stream in data['listener']:
-		listeners = data['listener'][stream]
+		listeners = stream
 
 		if (listeners['c'] > 0):
 			totalListeners += listeners['c']
 
 			perStream.append(u'%d via %s' % (listeners['c'],
-				streamNames.get(stream, stream)))
+				streamNames.get(stream['name'], stream['name'])))
 
 	if (totalListeners == 0):
 		return(u'Keine Zuhörer')
 
 	else:
-		return(u'%d Zuhörer: %s' % (totalListeners, ' | '.join(perStream)))
+		return(u'%d Zuhörer: [ %s' % (totalListeners, ' | '.join(perStream)))
 
 def formatShowtime(start, end):
 	dstart = datetime.datetime.fromtimestamp(start)
