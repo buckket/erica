@@ -53,6 +53,7 @@ class OHL(callbacks.Plugin):
 			
 			def unlimit():
 				irc.queueMsg(ircmsgs.unlimit(msg.args[0], 0))
+				
 			irc.queueMsg(ircmsgs.limit(msg.args[0], 1))  
 			schedule.addEvent(unlimit, time.time() + 60)
 			

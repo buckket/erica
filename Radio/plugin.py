@@ -517,9 +517,7 @@ class Radio(callbacks.Plugin):
 
 		if ('listener' in data):
 			for stream in data['listener']:
-				s = stream
-
-				s['c'] = int(s['c'])
+				stream['c'] = int(stream['c'])
 
 		def convertInteger(d, key):
 			if ((key in d) and (d[key] != None)):
@@ -573,12 +571,11 @@ def formatListeners(data):
 	perStream = []
 
 	for stream in data['listener']:
-		listeners = stream
 
-		if (listeners['c'] > 0):
-			totalListeners += listeners['c']
+		if (stream['c'] > 0):
+			totalListeners += stream['c']
 
-			perStream.append(u'%d via %s' % (listeners['c'],
+			perStream.append(u'%d via %s' % (stream['c'],
 				streamNames.get(stream['name'], stream['name'])))
 
 	if (totalListeners == 0):
