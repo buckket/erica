@@ -42,7 +42,6 @@ from urlparse import urlunparse
 import os
 import re
 
-
 class KC(callbacks.Plugin):
 	"""Add the help for "@plugin help KC" here
 	This should describe *how* to use this plugin."""
@@ -88,7 +87,7 @@ class KC(callbacks.Plugin):
 			irc.reply("Fehler!")
 		
 	dump = wrap(dump, ['text'])
-	
+
 
 Class = KC
 

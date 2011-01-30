@@ -37,12 +37,24 @@ import supybot.schedule as schedule
 import supybot.ircmsgs as ircmsgs
 
 import time
+import pygeoip
+
 
 
 class OHL(callbacks.Plugin):
 	"""Oberste Heeresleitung"""
 	
 	threaded = True
+	
+	def doJoin(self, irc, msg):
+		
+		# mibbit onJoin detection
+		if(msg.host.find('mibbit.com') != -1):
+			ip = self._numToDottedQuad(long(msg.user,16))
+			record = self._record_by_addr(ip)
+			if record:
+				reply = u'%s benutzt mibbit (%s, %s, %s)' % (msg.nick, ip, record['country_code'], record['city'])
+				irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply))
 
 	def shoa(self, irc, msg, args):
 		"""
@@ -88,6 +100,24 @@ class OHL(callbacks.Plugin):
 			irc.noReply()
 			
 	k = wrap(k, ['nickInChannel'])
+	
+	def geoip(self, irc, msg, args, ip):
+		record = self._record_by_addr(ip)
+		if record:
+			reply = u'%s (%s, %s)' % (ip, record['country_code'], record['city'])
+		else:
+			reply = 'Da stimmt etwas nicht!'
+		irc.reply(reply)
+		
+	geoip = wrap(geoip, ['ip'])
+	
+	def _record_by_addr(self, ip):
+		gi = pygeoip.GeoIP('/usr/share/rfk/var/GeoLiteCity.dat')
+		
+		try:
+			return gi.record_by_addr(ip)
+		except:
+			return False
 			
 	def _checkCPO(self, irc, msg):
 		if not irc.isChannel(msg.args[0]):
@@ -101,6 +131,16 @@ class OHL(callbacks.Plugin):
 			return False
 		else:
 			return True
+	
+	def _numToDottedQuad(self, n):
+		
+		d = 256 * 256 * 256
+		q = []
+		while d > 0:
+			m,n = divmod(n,d)
+			q.append(str(m))
+			d = d/256
+		return '.'.join(q)
 
 Class = OHL
 
