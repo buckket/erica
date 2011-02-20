@@ -53,7 +53,10 @@ class OHL(callbacks.Plugin):
 			ip = self._numToDottedQuad(long(msg.user,16))
 			record = self._record_by_addr(ip)
 			if record:
-				reply = u'%s benutzt mibbit (%s, %s, %s)' % (msg.nick, ip, record['country_code'], record['city'])
+				if 'city' in record:
+					reply = u'%s benutzt mibbit (%s, %s, %s)' % (msg.nick, ip, record['country_code'], record['city'])
+				else:
+					reply = u'%s benutzt mibbit (%s, %s)' % (msg.nick, ip, record['country_code'])
 				irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply))
 
 	def shoa(self, irc, msg, args):
@@ -104,7 +107,10 @@ class OHL(callbacks.Plugin):
 	def geoip(self, irc, msg, args, ip):
 		record = self._record_by_addr(ip)
 		if record:
-			reply = u'%s (%s, %s)' % (ip, record['country_code'], record['city'])
+			if 'city' in record:
+				reply = u'%s (%s, %s)' % (ip, record['country_code'], record['city'])
+			else:
+				reply = u'%s (%s)' % (ip, record['country_code'])
 		else:
 			reply = 'Da stimmt etwas nicht!'
 		irc.reply(reply)
