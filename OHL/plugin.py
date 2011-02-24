@@ -50,14 +50,12 @@ class OHL(callbacks.Plugin):
 		
 		# mibbit onJoin detection
 		if(msg.host.find('mibbit.com') != -1):
-			ip = self._numToDottedQuad(long(msg.user,16))
+			ip = self._numToDottedQuad(msg.user)
 			record = self._record_by_addr(ip)
 			if record:
-				if 'city' in record:
-					reply = u'%s benutzt mibbit (%s, %s, %s)' % (msg.nick, ip, record['country_code'], record['city'])
-				else:
-					reply = u'%s benutzt mibbit (%s, %s)' % (msg.nick, ip, record['country_code'])
+				reply = u'%s benutzt mibbit (%s, %s)' % (msg.nick, ip, self._geoip_city_check(record))
 				irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply))
+
 
 	def shoa(self, irc, msg, args):
 		"""
@@ -74,7 +72,7 @@ class OHL(callbacks.Plugin):
 			
 			for nick in irc.state.channels[msg.args[0]].users:
 				if nick not in irc.state.channels[msg.args[0]].ops:
-					irc.queueMsg(ircmsgs.kick(msg.args[0], nick, "Sie wurden soeben vernichtet"))
+					irc.queueMsg(ircmsgs.kick(msg.args[0], nick, 'Sie wurden soeben Opfer eines Pogroms'))
 					
 			irc.noReply()
 				
@@ -104,49 +102,122 @@ class OHL(callbacks.Plugin):
 			
 	k = wrap(k, ['nickInChannel'])
 	
+	
+	#mibbit
+	def mibbit(self, irc, msg, args, nick):
+		"""<nick>
+		Mibbit-Check auf <nick>
+		"""
+		
+		prefix = irc.state.nickToHostmask(nick)
+		user = ircutils.userFromHostmask(prefix)
+		host = ircutils.hostFromHostmask(prefix)
+		if(host.find('mibbit.com') != -1):
+			ip = self._numToDottedQuad(user)
+			record = self._record_by_addr(ip)
+			if record:
+				reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
+			else:
+				reply = u'geoIP Fehler!'
+		else:
+			reply = u'%s benutzt kein mibbit' % nick
+		irc.reply(reply.encode('utf-8'))
+	mibbit = wrap(mibbit, ['nickInChannel'])
+	
+	def mibbits(self, irc, msg, args):
+		"""
+		Zeigt alle mibbit-Benutzer im Kanal an
+		"""
+		
+		mibbits = []
+		for nick in irc.state.channels[msg.args[0]].users:
+			prefix = irc.state.nickToHostmask(nick)
+			user = ircutils.userFromHostmask(prefix)
+			host = ircutils.hostFromHostmask(prefix)
+			if(host.find('mibbit.com') != -1):
+				ip = self._numToDottedQuad(user)
+				record = self._record_by_addr(ip)
+				if record:
+					mibbits.append(u'%s (%s, %s)' % (nick, ip, self._geoip_city_check(record)))
+				else:
+					mibbits.append('%s (geoIP Fehler)' % (nick))
+		if len(mibbits) > 0:
+			reply =  u'mibbits: %s' % (', '.join(mibbits))
+		else:
+			reply = u'Keine mibbits entdeckt!'
+		irc.reply(reply.encode('utf-8'))
+	
+	#geoip
 	def geoip(self, irc, msg, args, ip):
+		"""<IP>
+		Zeigt GeoIP Infos zu <IP> an
+		"""
 		record = self._record_by_addr(ip)
 		if record:
-			if 'city' in record:
-				reply = u'%s (%s, %s)' % (ip, record['country_code'], record['city'])
-			else:
-				reply = u'%s (%s)' % (ip, record['country_code'])
+			reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
 		else:
-			reply = 'Da stimmt etwas nicht!'
-		irc.reply(reply)
-		
+			reply = u'geoIP Fehler!'
+		irc.reply(reply.encode('utf-8'))
 	geoip = wrap(geoip, ['ip'])
 	
+	def hex2ip(self, irc, msg, args, iphex):
+		"""<HexIP>
+		Wandelt 8Bit-Hexstring in IP um und gibt GeoIP Infos aus.
+		"""
+		ip = self._numToDottedQuad(iphex)
+		if ip and len(iphex) == 8:
+			record = self._record_by_addr(ip)
+			if record:
+				if 'city' in record:
+					reply = u'%s (%s, %s)' % (ip, record['country_code'], record['city'])
+				else:
+					reply = u'%s (%s)' % (ip, record['country_code'])
+			else:
+				reply = u'geoIP Fehler!'
+		else:
+			reply = u'Invalide Eingabe'
+		irc.reply(reply.encode('utf-8'))
+	hex2ip = wrap(hex2ip, ['text'])
+	
+	
 	def _record_by_addr(self, ip):
-		gi = pygeoip.GeoIP('/usr/share/rfk/var/GeoLiteCity.dat')
-		
+		gi = pygeoip.GeoIP('/usr/share/rfk/var/GeoLiteCity.dat')	
 		try:
 			return gi.record_by_addr(ip)
 		except:
 			return False
 			
+	def _geoip_city_check(self, record):
+			if 'city' in record:
+				return u'%s, %s' % (record['country_code'], record['city'])
+			else:
+				return u'%s' % (record['country_code'])
+				
 	def _checkCPO(self, irc, msg):
 		if not irc.isChannel(msg.args[0]):
-			irc.reply("Muss in einem Kanal gesendet werden!")
+			irc.reply('Muss in einem Kanal gesendet werden!')
 			return False
 		elif msg.nick not in irc.state.channels[msg.args[0]].ops:
-			irc.reply("Als ob!")
+			irc.reply('Als ob!')
 			return False
 		elif irc.nick not in irc.state.channels[msg.args[0]].ops:
-			irc.reply("%s braucht op ;_;" % irc.nick)
+			irc.reply('%s braucht op ;_;' % irc.nick)
 			return False
 		else:
 			return True
 	
 	def _numToDottedQuad(self, n):
-		
-		d = 256 * 256 * 256
-		q = []
-		while d > 0:
-			m,n = divmod(n,d)
-			q.append(str(m))
-			d = d/256
-		return '.'.join(q)
+		try:
+			n = long(n,16)
+			d = 256 * 256 * 256
+			q = []
+			while d > 0:
+				m,n = divmod(n,d)
+				q.append(str(m))
+				d = d/256
+			return '.'.join(q)
+		except:
+			return False
 
 Class = OHL
 
