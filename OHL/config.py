@@ -44,6 +44,7 @@ OHL = conf.registerPlugin('OHL')
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(OHL, 'someConfigVariableName',
 #     registry.Boolean(False, """Help for someConfigVariableName."""))
-
+conf.registerGlobalValue(OHL, 'geoipdb',
+    registry.String('', """GeoIP Database""", private=True))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

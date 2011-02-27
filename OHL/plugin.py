@@ -36,6 +36,7 @@ import supybot.callbacks as callbacks
 import supybot.schedule as schedule
 import supybot.ircmsgs as ircmsgs
 
+import socket
 import time
 import pygeoip
 
@@ -76,31 +77,32 @@ class OHL(callbacks.Plugin):
 					
 			irc.noReply()
 				
-	def k(self, irc, msg, args, nick):
-		"""<user>
+	def k(self, irc, msg, args, nicks):
+		"""[user] ... [user]
 		Kick mit Timeban
 		"""
 
 		if(self._checkCPO(irc, msg)):
 			
-			prefix = irc.state.nickToHostmask(nick)
-			user = ircutils.userFromHostmask(prefix)
-			host = ircutils.hostFromHostmask(prefix)
+			for nick in nicks:
+				prefix = irc.state.nickToHostmask(nick)
+				user = ircutils.userFromHostmask(prefix)
+				host = ircutils.hostFromHostmask(prefix)
 			
-			hostmask = '*!*@%s' % host
-			if(host.find('mibbit.com') != -1):
-				hostmask = '*!%s@*.mibbit.com' % user
+				hostmask = '*!*@%s' % host
+				if(host.find('mibbit.com') != -1):
+					hostmask = '*!%s@*.mibbit.com' % user
 			
-			def unban():
-				irc.queueMsg(ircmsgs.unban(msg.args[0], hostmask))
+				def unban():
+					irc.queueMsg(ircmsgs.unban(msg.args[0], hostmask))
 				
-			irc.queueMsg(ircmsgs.ban(msg.args[0], hostmask))
-			irc.queueMsg(ircmsgs.kick(msg.args[0], nick, nick))
-			schedule.addEvent(unban, time.time() + 900)
+				irc.queueMsg(ircmsgs.ban(msg.args[0], hostmask))
+				irc.queueMsg(ircmsgs.kick(msg.args[0], nick, nick))
+				schedule.addEvent(unban, time.time() + 900)
 			
-			irc.noReply()
+		irc.noReply()
 			
-	k = wrap(k, ['nickInChannel'])
+	k = wrap(k, [many('nickInChannel')])
 	
 	
 	#mibbit
@@ -152,6 +154,7 @@ class OHL(callbacks.Plugin):
 		"""<IP>
 		Zeigt GeoIP Infos zu <IP> an
 		"""
+		
 		record = self._record_by_addr(ip)
 		if record:
 			reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
@@ -162,16 +165,14 @@ class OHL(callbacks.Plugin):
 	
 	def hex2ip(self, irc, msg, args, iphex):
 		"""<HexIP>
-		Wandelt 8Bit-Hexstring in IP um und gibt GeoIP Infos aus.
+		Wandelt 8Bit-Hexstring in IP um und gibt GeoIP Infos aus
 		"""
+		
 		ip = self._numToDottedQuad(iphex)
 		if ip and len(iphex) == 8:
 			record = self._record_by_addr(ip)
 			if record:
-				if 'city' in record:
-					reply = u'%s (%s, %s)' % (ip, record['country_code'], record['city'])
-				else:
-					reply = u'%s (%s)' % (ip, record['country_code'])
+				reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
 			else:
 				reply = u'geoIP Fehler!'
 		else:
@@ -179,9 +180,29 @@ class OHL(callbacks.Plugin):
 		irc.reply(reply.encode('utf-8'))
 	hex2ip = wrap(hex2ip, ['text'])
 	
+	def host2ip(self, irc, msg, args, hostname):
+		"""<hostname>
+		Wandelt <hostname> in IP um und gibt GeoIP Infos aus
+		"""
+		
+		try:
+			ip = socket.gethostbyname(hostname)
+			if ip:
+				record = self._record_by_addr(ip)
+				if record:
+					reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
+				else:
+					reply = u'geoIP Fehler!'
+			
+		except:
+			reply = u'gethostbyname() Error'
+			
+		irc.reply(reply.encode('utf-8'))
+	host2ip = wrap(host2ip, ['text'])
+	
 	
 	def _record_by_addr(self, ip):
-		gi = pygeoip.GeoIP('/usr/share/rfk/var/GeoLiteCity.dat')	
+		gi = pygeoip.GeoIP(self.registryValue('geoipdb'))	
 		try:
 			return gi.record_by_addr(ip)
 		except:
