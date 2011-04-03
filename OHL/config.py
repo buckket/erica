@@ -46,5 +46,7 @@ OHL = conf.registerPlugin('OHL')
 #     registry.Boolean(False, """Help for someConfigVariableName."""))
 conf.registerGlobalValue(OHL, 'geoipdb',
     registry.String('', """GeoIP Database""", private=True))
+conf.registerChannelValue(OHL, 'mibbitAnnounce',
+    registry.Boolean(False, """Enables mibbitAnnounce"""))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

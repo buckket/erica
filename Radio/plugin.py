@@ -325,6 +325,7 @@ class Radio(callbacks.Plugin):
 		
 		foreign = 0
 		sum = 0
+		tmp = 0
 
 		result = self._radioQuery('listener')
 		mounts = formatListeners(result)

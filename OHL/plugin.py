@@ -35,6 +35,8 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.schedule as schedule
 import supybot.ircmsgs as ircmsgs
+import supybot.ircdb as ircdb
+
 
 import socket
 import time
@@ -50,12 +52,13 @@ class OHL(callbacks.Plugin):
 	def doJoin(self, irc, msg):
 		
 		# mibbit onJoin detection
-		if(msg.host.find('mibbit.com') != -1):
-			ip = self._numToDottedQuad(msg.user)
-			record = self._record_by_addr(ip)
-			if record:
-				reply = u'%s benutzt mibbit (%s, %s)' % (msg.nick, ip, self._geoip_city_check(record))
-				irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply))
+		if(self.registryValue('mibbitAnnounce',msg.args[0])):
+			if(msg.host.find('mibbit.com') != -1):
+				ip = self._numToDottedQuad(msg.user)
+				record = self._record_by_addr(ip)
+				if record:
+					reply = u'%s benutzt mibbit (%s, %s)' % (msg.nick, ip, self._geoip_city_check(record))
+					irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply))
 
 
 	def shoa(self, irc, msg, args):
@@ -200,6 +203,26 @@ class OHL(callbacks.Plugin):
 		irc.reply(reply.encode('utf-8'))
 	host2ip = wrap(host2ip, ['text'])
 	
+	def ip2host(self, irc, msg, args, ip):
+		"""<ip>
+		Wandelt <ip> in hostname um und gibt GeoIP Infos aus
+		"""
+		
+		try:
+			hostname = socket.gethostbyaddr(ip)
+			hostname = hostname[0]
+			if hostname:
+				record = self._record_by_addr(ip)
+				if record:
+					reply = u'%s (%s)' % (hostname, self._geoip_city_check(record))
+				else:
+					reply = u'geoIP Fehler!'
+		except:
+			reply = u'gethostbyaddr() Error'
+			
+		irc.reply(reply.encode('utf-8'))
+	ip2host = wrap(ip2host, ['ip'])
+	
 	
 	def _record_by_addr(self, ip):
 		gi = pygeoip.GeoIP(self.registryValue('geoipdb'))	
@@ -218,7 +241,7 @@ class OHL(callbacks.Plugin):
 		if not irc.isChannel(msg.args[0]):
 			irc.reply('Muss in einem Kanal gesendet werden!')
 			return False
-		elif msg.nick not in irc.state.channels[msg.args[0]].ops:
+		elif msg.nick not in irc.state.channels[msg.args[0]].ops and not ircdb.checkCapability(msg.prefix, 'admin'):
 			irc.reply('Als ob!')
 			return False
 		elif irc.nick not in irc.state.channels[msg.args[0]].ops:
