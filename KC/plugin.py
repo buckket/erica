@@ -89,7 +89,7 @@ class KC(callbacks.Plugin):
 			else:
 				irc.reply(u"Fehler!")
 		else:
-			reply = u"Kein gültige URL"
+			reply = u"Keine gültige URL"
 		
 	kczip = wrap(kczip, ['text'])
 	
@@ -109,7 +109,7 @@ class KC(callbacks.Plugin):
 			else:
 				reply = u"Fehler!"
 		else:
-			reply = u"Kein gültige URL"
+			reply = u"Keine gültige URL"
 		irc.reply(reply.encode('utf-8'))
 		
 	kcpng = wrap(kcpng, ['text'])
