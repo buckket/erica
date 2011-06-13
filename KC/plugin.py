@@ -35,6 +35,7 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
+import supybot.ircdb as ircdb
 
 from urlparse import urlparse
 from urlparse import urlunparse
@@ -113,6 +114,18 @@ class KC(callbacks.Plugin):
 		irc.reply(reply.encode('utf-8'))
 		
 	kcpng = wrap(kcpng, ['text'])
+	
+	def komturcode(self, irc, msg, args, nick):
+	    """<nick>
+	    
+	    Autobeantworter zu Komturcodeanfragen
+	    """
+	   
+	    if ircdb.checkCapability(msg.prefix, 'admin'):
+	        irc.queueMsg(ircmsgs.privmsg(msg.args[0], '%s: Falls du Opfer eines Netzwerkbans bist, diesen jedoch nicht verschuldet hast, wende dich an einen der drei Admins um einen Komturcode zu erhalten.' % nick))
+
+	komturcode = wrap(komturcode, ['nickInChannel'])
+	    
 
 
 Class = KC

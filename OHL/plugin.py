@@ -232,7 +232,7 @@ class OHL(callbacks.Plugin):
 			return False
 			
 	def _geoip_city_check(self, record):
-			if 'city' in record:
+			if 'city' in record and 'country_code' in record:
 				return u'%s, %s' % (record['country_code'], record['city'])
 			else:
 				return u'%s' % (record['country_code'])
