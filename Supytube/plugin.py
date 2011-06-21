@@ -116,6 +116,11 @@ class Supytube(callbacks.Plugin):
 			    #log.critical('Views: %s' % handler.views)
 			    #log.critical('Rating Count: %s' % handler.rating_count)
 			    #log.critical('Duration: %s' % handler.duration)
+			    
+			    # check for empty rating and views
+			    handler.rating = handler.rating if handler.rating else 0
+			    handler.views = handler.views if handler.views else 0
+			    
 			    message = 'Title: %s, Views: %s, Rating: %s%%' % (ircutils.bold(handler.title), ircutils.bold(handler.views),ircutils.bold(round(float(handler.rating))))
 			    #message = unicode( message, "utf-8")
 			    message = message.encode("utf-8", "replace")
