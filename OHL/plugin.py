@@ -50,6 +50,10 @@ class OHL(callbacks.Plugin):
 	threaded = True
 	
 	def doJoin(self, irc, msg):
+	    
+		# autoGhost onJoin
+		if(self.registryValue('ownerNick') == msg.nick):
+			self._autoGhost(irc, msg)
 		
 		# mibbit onJoin detection
 		if(self.registryValue('mibbitAnnounce',msg.args[0])):
@@ -59,8 +63,14 @@ class OHL(callbacks.Plugin):
 				if record:
 					reply = u'%s benutzt mibbit (%s, %s)' % (msg.nick, ip, self._geoip_city_check(record))
 					irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply))
-
-
+	
+	def doNick(self, irc, msg):
+        
+		#autoGhost onNickchange
+		if(self.registryValue('ownerNick') == msg.args[0]):
+			self._autoGhost(irc, msg)
+			
+			
 	def shoa(self, irc, msg, args):
 		"""
 		Shoa ist anberaumt
@@ -223,6 +233,10 @@ class OHL(callbacks.Plugin):
 		irc.reply(reply.encode('utf-8'))
 	ip2host = wrap(ip2host, ['ip'])
 	
+	
+	def _autoGhost(self, irc, msg):
+		if(msg.host != self.registryValue('ownerHost')):
+			irc.queueMsg(ircmsgs.privmsg('NickServ', 'GHOST %s %s' % (self.registryValue('ownerNick'),self.registryValue('ownerPass'))))
 	
 	def _record_by_addr(self, ip):
 		gi = pygeoip.GeoIP(self.registryValue('geoipdb'))	

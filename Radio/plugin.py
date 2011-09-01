@@ -430,7 +430,7 @@ class Radio(callbacks.Plugin):
 				self._radioQuery('authpart', { 'hostmask' : hostmask })
 				count += 1
 			else:
-				hostmaskIRC = irc.state.nickToHostmask(ircutils.nickFromHostmask(hostmask))
+				hostmaskIRC = irc.state.nickToHostmask(ircutils.nickFromHostmask(hostmask).encode('ascii'))
 				if (hostmask.split('!')[1] != hostmaskIRC.split('!')[1]):
 					self._radioQuery('authpart', { 'hostmask' : hostmask })
 					count += 1
@@ -512,7 +512,7 @@ class Radio(callbacks.Plugin):
 		response = opener.open(self.registryValue('queryURL') + '?'+
 			'apikey=' + self.registryValue('queryPass') + '&' +
 			urllib.urlencode(parameters))
-		data = json.read(response.read())
+		data = json.loads(response.read())
 
 		# teddy cannot into integer :3
 
