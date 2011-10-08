@@ -74,46 +74,46 @@ class KC(callbacks.Plugin):
 				reply = ' '.join(tmp)
 				irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply))
 
-	def kczip(self, irc, msg, args, text):
-		"""<kcurl>
-		
-		Speichert einen Faden von KC
-		"""
-		if(re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)):
-			match = re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)
-			threadid = match.group(2)
-			board = match.group(1)
-			irc.reply(u"Versuche Faden %s von /%s/ zu speichern." % (threadid, board))
-			os.system("/home/supybot/krautdmp.pl " + text)
-			if(os.path.isfile("/var/www/kczip/%s-%s/%s-%s.zip" % (board, threadid, board, threadid))):
-				irc.reply(u"Fertig: http://uncloaked.net/kczip/%s-%s/%s-%s.zip" % (board, threadid, board, threadid))
-			else:
-				irc.reply(u"Fehler!")
-		else:
-			reply = u"Keine gültige URL"
-		
-	kczip = wrap(kczip, ['text'])
-	
-	def kcpng(self, irc, msg, args, text):
-		"""<kcurl>
-		
-		Speichert einen Faden als PNG von KC
-		"""
-		if(re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)):
-			match = re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)
-			threadid = match.group(2)
-			board = match.group(1)
-			irc.reply(u"Versuche Faden %s von /%s/ zu speichern." % (threadid, board))
-			os.system("wkhtmltoimage-i386 -n --width 1280 %s /var/www/kcpng/%s-%s.png" % (text, board, threadid))
-			if(os.path.isfile("/var/www/kcpng/%s-%s.png" % (board, threadid))):
-				reply = u"Fertig: http://uncloaked.net/kcpng/%s-%s.png" % (board, threadid)
-			else:
-				reply = u"Fehler!"
-		else:
-			reply = u"Keine gültige URL"
-		irc.reply(reply.encode('utf-8'))
-		
-	kcpng = wrap(kcpng, ['text'])
+	# def kczip(self, irc, msg, args, text):
+	# 	"""<kcurl>
+	# 	
+	# 	Speichert einen Faden von KC
+	# 	"""
+	# 	if(re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)):
+	# 		match = re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)
+	# 		threadid = match.group(2)
+	# 		board = match.group(1)
+	# 		irc.reply(u"Versuche Faden %s von /%s/ zu speichern." % (threadid, board))
+	# 		os.system("/home/supybot/krautdmp.pl " + text)
+	# 		if(os.path.isfile("/var/www/kczip/%s-%s/%s-%s.zip" % (board, threadid, board, threadid))):
+	# 			irc.reply(u"Fertig: http://uncloaked.net/kczip/%s-%s/%s-%s.zip" % (board, threadid, board, threadid))
+	# 		else:
+	# 			irc.reply(u"Fehler!")
+	# 	else:
+	# 		reply = u"Keine gültige URL"
+	# 	
+	# kczip = wrap(kczip, ['text'])
+	# 
+	# def kcpng(self, irc, msg, args, text):
+	# 	"""<kcurl>
+	# 	
+	# 	Speichert einen Faden als PNG von KC
+	# 	"""
+	# 	if(re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)):
+	# 		match = re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)
+	# 		threadid = match.group(2)
+	# 		board = match.group(1)
+	# 		irc.reply(u"Versuche Faden %s von /%s/ zu speichern." % (threadid, board))
+	# 		os.system("wkhtmltoimage-i386 -n --width 1280 %s /var/www/kcpng/%s-%s.png" % (text, board, threadid))
+	# 		if(os.path.isfile("/var/www/kcpng/%s-%s.png" % (board, threadid))):
+	# 			reply = u"Fertig: http://uncloaked.net/kcpng/%s-%s.png" % (board, threadid)
+	# 		else:
+	# 			reply = u"Fehler!"
+	# 	else:
+	# 		reply = u"Keine gültige URL"
+	# 	irc.reply(reply.encode('utf-8'))
+	# 	
+	# kcpng = wrap(kcpng, ['text'])
 	
 	def komturcode(self, irc, msg, args, nick):
 	    """<nick>

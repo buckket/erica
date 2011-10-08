@@ -353,6 +353,7 @@ class Radio(callbacks.Plugin):
 		irc.queueMsg(ircmsgs.privmsg(msg.nick, 'http://radio.krautchan.net:8000/radio.mp3'))
 		irc.queueMsg(ircmsgs.privmsg(msg.nick, 'http://radio.krautchan.net:8000/radio.ogg'))
 		irc.queueMsg(ircmsgs.privmsg(msg.nick, 'http://radio.krautchan.net:8000/radiohq.ogg'))
+		irc.queueMsg(ircmsgs.privmsg(msg.nick, 'http://radio.krautchan.net:8000/radio.aac'))
 		
 		irc.noReply()
 		
@@ -426,11 +427,12 @@ class Radio(callbacks.Plugin):
 		count = 0
 		result = self._radioQuery('areirc')
 		for hostmask in result['hostmasks']:
+			hostmask = hostmask.encode('ascii')
 			if ircutils.nickFromHostmask(hostmask) not in self.monitorList:
 				self._radioQuery('authpart', { 'hostmask' : hostmask })
 				count += 1
 			else:
-				hostmaskIRC = irc.state.nickToHostmask(ircutils.nickFromHostmask(hostmask).encode('ascii'))
+				hostmaskIRC = irc.state.nickToHostmask(ircutils.nickFromHostmask(hostmask))
 				if (hostmask.split('!')[1] != hostmaskIRC.split('!')[1]):
 					self._radioQuery('authpart', { 'hostmask' : hostmask })
 					count += 1
@@ -549,7 +551,7 @@ class Radio(callbacks.Plugin):
 	def _isIRC(self, djid):
 		result = self._radioQuery('isirc', { 'djid' : djid})
 		if result['auth']['status'] == 0:
-			return result['auth']['nick']
+			return result['auth']['hostmask'].split('!')[0]
 		else:
 			return 0
 	
