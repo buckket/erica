@@ -353,7 +353,7 @@ class Radio(callbacks.Plugin):
 		irc.queueMsg(ircmsgs.privmsg(msg.nick, 'http://radio.krautchan.net:8000/radio.mp3'))
 		irc.queueMsg(ircmsgs.privmsg(msg.nick, 'http://radio.krautchan.net:8000/radio.ogg'))
 		irc.queueMsg(ircmsgs.privmsg(msg.nick, 'http://radio.krautchan.net:8000/radiohq.ogg'))
-		irc.queueMsg(ircmsgs.privmsg(msg.nick, 'http://radio.krautchan.net:8000/radio.aac'))
+		irc.queueMsg(ircmsgs.privmsg(msg.nick, 'http://radio.krautchan.net:8000/radio.aacp'))
 		
 		irc.noReply()
 		
