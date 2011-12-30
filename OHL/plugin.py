@@ -97,6 +97,8 @@ class OHL(callbacks.Plugin):
 
 		if(self._checkCPO(irc, msg)):
 			
+			hostmasksToRemove = []
+			
 			for nick in nicks:
 				prefix = irc.state.nickToHostmask(nick)
 				user = ircutils.userFromHostmask(prefix)
@@ -105,13 +107,17 @@ class OHL(callbacks.Plugin):
 				hostmask = '*!*@%s' % host
 				if(host.find('mibbit.com') != -1):
 					hostmask = '*!%s@*.mibbit.com' % user
+					
+				hostmasksToRemove.append(hostmask)
 			
-				def unban():
-					irc.queueMsg(ircmsgs.unban(msg.args[0], hostmask))
-				
 				irc.queueMsg(ircmsgs.ban(msg.args[0], hostmask))
-				irc.queueMsg(ircmsgs.kick(msg.args[0], nick, nick))
-				schedule.addEvent(unban, time.time() + 900)
+				irc.queueMsg(ircmsgs.kick(msg.args[0], nick, 'Your behavior is not conducive to the desired environment.'))
+			
+			def unban():
+				for hostmask in hostmasksToRemove:
+					irc.queueMsg(ircmsgs.unban(msg.args[0], hostmask))
+			
+			schedule.addEvent(unban, time.time() + 900)
 			
 		irc.noReply()
 			
