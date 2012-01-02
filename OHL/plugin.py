@@ -107,6 +107,9 @@ class OHL(callbacks.Plugin):
 				hostmask = '*!*@%s' % host
 				if(host.find('mibbit.com') != -1):
 					hostmask = '*!%s@*.mibbit.com' % user
+					irc.queueMsg(ircmsgs.ban(msg.args[0], hostmask))
+					hostmasksToRemove.append(hostmask)
+					hostmask = '*!*@%s' % self._numToDottedQuad(user)
 					
 				hostmasksToRemove.append(hostmask)
 			
