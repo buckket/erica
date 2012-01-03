@@ -345,6 +345,30 @@ class Radio(callbacks.Plugin):
 		reply =  u"%s )( %s )( %i%% Ausländer )" % (mounts, ' | '.join(countries), int(tmp))
 		irc.reply(reply.encode('utf-8'))
 		
+	def relays(self, irc, msg, args):
+		"""
+		Zeigt die Anzahl der Zuhoerer pro Relay
+		"""
+		
+		sum = 0
+		master = 0
+		slaves = []
+		
+		result = self._radioQuery('relay')
+		
+		for relay in result['relay']:
+			if relay['hostname'] == 'radio.krautchan.net':
+				# Masterserver
+				master = int(relay['c'])
+				sum += master
+			else:
+				# Slaves
+				slaves.append('%i via Relay #%i' % (int(relay['c']), int(relay['relay'])))
+				sum += int(relay['c'])
+		
+		reply = u"%i Zuhörer ( %i via Master | %s )" % (sum, master, ' | '.join(slaves))
+		irc.reply(reply.encode('utf-8'))
+		
 	def streams(self, irc, msg, args):
 		"""
 		Sendet die URLs via Query.
