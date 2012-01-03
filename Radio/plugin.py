@@ -314,8 +314,25 @@ class Radio(callbacks.Plugin):
 		"""
 		
 		result = self._radioQuery('traffic')
-		reply = u'rx: %s kB/s | tx: %s kB/s' % (result['traffic']['in'], result['traffic']['out'])
+
+		sum = 0
+		master = 0
+		slaves = []
+				
+		for relay in result['traffic']:
+			if relay['out'] == None:
+				relay['out'] = 0
+			
+			if relay['hostname'] == 'radio.krautchan.net':
+				# Masterserver
+				master = int(relay['out'])
+				sum += master
+			else:
+				# Slaves
+				slaves.append('%i kB/s via Relay #%i' % (int(relay['out']), int(relay['relay'])))
+				sum += int(relay['out'])
 		
+		reply = u"%i kB/s ( %i kB/s via Master | %s )" % (sum, master, ' | '.join(slaves))				
 		irc.reply(reply.encode('utf-8'))
 				
 	def listeners(self, irc, msg, args):
