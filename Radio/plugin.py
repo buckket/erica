@@ -383,7 +383,11 @@ class Radio(callbacks.Plugin):
 				slaves.append('%i via Relay #%i' % (int(relay['c']), int(relay['relay'])))
 				sum += int(relay['c'])
 		
-		reply = u"%i Zuhörer ( %i via Master | %s )" % (sum, master, ' | '.join(slaves))
+		if slaves:
+			reply = u"%i Zuhörer ( %i via Master | %s )" % (sum, master, ' | '.join(slaves))
+		else:
+			reply = u"%i Zuhörer ( %i via Master )" % (sum, master)
+			
 		irc.reply(reply.encode('utf-8'))
 		
 	def streams(self, irc, msg, args):

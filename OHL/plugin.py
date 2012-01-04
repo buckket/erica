@@ -40,7 +40,7 @@ import supybot.ircdb as ircdb
 
 import socket
 import time
-import pygeoip
+import GeoIP
 
 
 
@@ -248,7 +248,7 @@ class OHL(callbacks.Plugin):
 			irc.queueMsg(ircmsgs.privmsg('NickServ', 'GHOST %s %s' % (self.registryValue('ownerNick'),self.registryValue('ownerPass'))))
 	
 	def _record_by_addr(self, ip):
-		gi = pygeoip.GeoIP(self.registryValue('geoipdb'))	
+		gi = GeoIP.open(self.registryValue('geoipdb'), GeoIP.GEOIP_STANDARD)
 		try:
 			return gi.record_by_addr(ip)
 		except:
@@ -256,9 +256,9 @@ class OHL(callbacks.Plugin):
 			
 	def _geoip_city_check(self, record):
 			if 'city' in record and 'country_code' in record:
-				return u'%s, %s' % (record['country_code'], record['city'])
+				return u'%s, %s' % (unicode(record['country_code'], 'iso-8859-1'), unicode(record['city'], 'iso-8859-1'))
 			else:
-				return u'%s' % (record['country_code'])
+				return u'%s' % (unicode(record['country_code'], 'iso-8859-1'))
 				
 	def _checkCPO(self, irc, msg):
 		if not irc.isChannel(msg.args[0]):
