@@ -61,8 +61,8 @@ class OHL(callbacks.Plugin):
 				ip = self._numToDottedQuad(msg.user)
 				record = self._record_by_addr(ip)
 				if record:
-					reply = u'%s benutzt mibbit (%s, %s)' % (msg.nick, ip, self._geoip_city_check(record))
-					irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply))
+					reply = u'mibbit (%s)' % (unicode(record['country_code'], 'iso-8859-1'))
+					irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply.encode('utf-8')))
 	
 	def doNick(self, irc, msg):
         
