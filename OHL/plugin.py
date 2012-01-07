@@ -77,17 +77,20 @@ class OHL(callbacks.Plugin):
 		"""
 		
 		if(self._checkCPO(irc, msg)):
+		    
+			nicks = []
 			
 			def unlimit():
 				irc.queueMsg(ircmsgs.unlimit(msg.args[0], 0))
 				
 			irc.queueMsg(ircmsgs.limit(msg.args[0], 1))  
-			schedule.addEvent(unlimit, time.time() + 60)
+			schedule.addEvent(unlimit, time.time() + 3*60)
 			
 			for nick in irc.state.channels[msg.args[0]].users:
 				if nick not in irc.state.channels[msg.args[0]].ops:
-					irc.queueMsg(ircmsgs.kick(msg.args[0], nick, 'Sie wurden soeben Opfer eines Pogroms'))
-					
+					nicks.append(nick)
+			
+			irc.queueMsg(ircmsgs.kicks(msg.args[0], nicks, 'Reichskristallnacht'))
 			irc.noReply()
 				
 	def k(self, irc, msg, args, nicks):
@@ -97,7 +100,7 @@ class OHL(callbacks.Plugin):
 
 		if(self._checkCPO(irc, msg)):
 			
-			hostmasksToRemove = []
+			hostmasks = []
 			
 			for nick in nicks:
 				prefix = irc.state.nickToHostmask(nick)
@@ -107,18 +110,16 @@ class OHL(callbacks.Plugin):
 				hostmask = '*!*@%s' % host
 				if(host.find('mibbit.com') != -1):
 					hostmask = '*!%s@*.mibbit.com' % user
-					irc.queueMsg(ircmsgs.ban(msg.args[0], hostmask))
-					hostmasksToRemove.append(hostmask)
+					hostmasks.append(hostmask)
 					hostmask = '*!*@%s' % self._numToDottedQuad(user)
 					
-				hostmasksToRemove.append(hostmask)
+				hostmasks.append(hostmask)
 			
-				irc.queueMsg(ircmsgs.ban(msg.args[0], hostmask))
-				irc.queueMsg(ircmsgs.kick(msg.args[0], nick, 'Your behavior is not conducive to the desired environment.'))
+			irc.queueMsg(ircmsgs.bans(msg.args[0], hostmasks))
+			irc.queueMsg(ircmsgs.kicks(msg.args[0], nicks, 'Your behavior is not conducive to the desired environment.'))
 			
 			def unban():
-				for hostmask in hostmasksToRemove:
-					irc.queueMsg(ircmsgs.unban(msg.args[0], hostmask))
+				irc.queueMsg(ircmsgs.unbans(msg.args[0], hostmasks))
 			
 			schedule.addEvent(unban, time.time() + 900)
 			
