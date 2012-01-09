@@ -67,7 +67,7 @@ class Reminder(callbacks.Plugin):
             self.curReminds -= 1
             if msg.nick in irc.state.channels[msg.args[0]].users:
                 if reason:
-                    reply = u"[Reminder] %s! %s (%s)" % (msg.nick, reason, rtime)
+                    reply = u"[Reminder] %s! %s (%s)" % (msg.nick, unicode(reason, 'utf-8'), rtime)
                 else:
                     reply = u"[Reminder] %s! (%s)" % (msg.nick, rtime)
                 irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply.encode('utf-8')))
