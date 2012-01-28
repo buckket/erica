@@ -85,6 +85,8 @@ class Radio(callbacks.Plugin):
 					announce = u'Statt %s strömt jetzt %s' % (
 						self.lastDJ, result['dj'])
 						
+					self._radioCheckReminds(irc)
+						
 					if(self.registryValue('autovoice')):
 						self._undoAutoVoice(irc)
 						ircname = self._isIRC(result['djid'])
@@ -97,6 +99,8 @@ class Radio(callbacks.Plugin):
 
 				elif ((result['djid'] != None) and (self.lastDJ == None)):
 					announce = u'%s strömt jetzt' % (result['dj'])
+					
+					self._radioCheckReminds(irc)
 					
 					if(self.registryValue('autovoice')):
 						ircname = self._isIRC(result['djid'])
@@ -542,7 +546,111 @@ class Radio(callbacks.Plugin):
 			reply = u"Eingabe ungültig"
 		irc.reply(reply.encode('utf-8'))
 	rthread = wrap(rthread, ['somethingWithoutSpaces', optional('text')])
-				
+	
+	def rremind(self, irc, msg, args, action, id):
+		
+		if action == 'add':
+			if id != None:
+				if id.isdigit() == True:
+					# show
+					result = self._radioQuery('auth,remindadd', {'hostmask': msg.prefix, 'type':'show', 'id': int(id)})
+					if 'errid' in result:
+						if(result['errid'] == 21):
+							reply = u"Auth fehlgeschlagen"
+						elif(result['errid'] == 22):
+							reply = u"Eingabe ungültig"
+					else:
+						if result['remindadd']['status'] != 0:
+							if 'dupe' in result['remindadd']:
+								reply = u"Eintrag bereits vorhanden"
+							else:
+								reply = u"Sendung unbekannt"
+						else:
+							reply = u"Erinnerung für Sendung %s hinzugefügt" % id
+				elif id.isdigit() == False:
+					# dj
+					result = self._radioQuery('djinfo', {'djname':id})
+					if result['djid']:
+						djid = result['djid']
+						djname = result['dj']
+						result = self._radioQuery('auth,remindadd', {'hostmask': msg.prefix, 'type':'dj', 'id': int(djid)})
+						if 'errid' in result:
+							if(result['errid'] == 21):
+								reply = u"Auth fehlgeschlagen"
+							elif(result['errid'] == 22):
+								reply = u"Eingabe ungültig"
+						else:
+							if result['remindadd']['status'] != 0:
+								if 'dupe' in result['remindadd']:
+									reply = u"Eintrag bereits vorhanden"
+								else:
+									reply = u"DJ unbekannt"
+							else:
+								reply = u"Erinnerung für %ss Sendungen hinzugefügt" % djname
+					else:
+						reply = u"DJ unbekannt"
+				else:
+					reply = u"Eingabe ungültig"
+			else:
+				reply = "Keine ID angegeben"
+			
+		elif action == 'delete':
+			if id != None:
+				result = self._radioQuery('auth,reminddelete', {'hostmask': msg.prefix, 'id': id})
+				if 'errid' in result:
+					if(result['errid'] == 21):
+						reply = u"Auth fehlgeschlagen"
+					elif(result['errid'] == 22):
+						reply = u"Eingabe ungültig"
+				else:
+					if result['reminddelete']['status'] == 0:
+						reply = u"Erinnerung %s gelöscht" % id
+					else:
+						reply = u"Löschen fehlgeschlagen"
+			else:
+				reply = u"Keine ID angegeben"
+			
+		elif action == 'list':
+			result = self._radioQuery('auth,remindlist', {'hostmask': msg.prefix})
+			if 'errid' in result:
+				if(result['errid'] == 21):
+					reply = u"Auth fehlgeschlagen"
+				elif(result['errid'] == 22):
+					reply = u"Eingabe ungültig"
+			else:
+				for key in result['remindlist']:
+					if key['type'] == 'show':
+						message = u"%s) Sendung: %s" % (key['id'], key['value'])
+					elif key['type'] == 'dj':
+						message = u"%s) DJ: %s" % (key['id'], key['value'])
+					irc.queueMsg(ircmsgs.privmsg(msg.nick, message.encode('utf-8')))
+				if len(result['remindlist']) == 0:
+					reply = u"Keine Erinnerungen"
+		else:
+			reply = u"Eingabe ungültig"
+		try:
+			irc.reply(reply.encode('utf-8'))
+		except:
+			pass
+			
+	rremind = wrap(rremind, ['somethingWithoutSpaces', optional('somethingWithoutSpaces')])
+	
+	def remindget(self, irc, msg, args):
+		result = self._radioQuery('show');
+		showid = result['showid']
+		
+		result = self._radioQuery('dj')
+		djid = result['djid']
+		
+		temp = []
+		
+		result = self._radioQuery('remindget', {'showid':showid, 'djid':djid})
+		for key in result['remindGet']:
+			temp.append(u"%s aufwachen! Ein Remind für dich gefunden!" % result['remindGet'][key])
+			
+		reply = u" %s " % ' | '.join(temp)
+		irc.reply(reply.encode('utf-8'))
+						
 	def _radioQuery(self, function, parameters={}):
 
 		parameters['w'] = function
@@ -586,6 +694,22 @@ class Radio(callbacks.Plugin):
 			if (self.registryValue('announce', channel)):
 				irc.queueMsg(ircmsgs.privmsg(channel, message.encode('utf-8')))
 				
+	def _radioCheckReminds(self, irc):
+		result = self._radioQuery('show')
+		try:
+			showid = result['showid']
+			showname = result['showname']
+			djid = result['showdjid']
+			dj = result['showdj']
+		except:
+			return
+		
+		result = self._radioQuery('remindget', {'showid':showid, 'djid':djid})
+		for key in result['remindGet']:
+			name = result['remindGet'][key]
+			message = u"Huhu, %s, ich wollte dich daran erinnern, dass %s nun '%s' auf RfK strömt." % (name, dj, showname)
+			irc.queueMsg(ircmsgs.privmsg(name.encode('utf-8'), message.encode('utf-8')))
+	
 	def _updateMonitorList(self, irc):
 		if(self.registryValue('monitor')):
 			self.monitorList = []
