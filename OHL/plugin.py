@@ -79,6 +79,7 @@ class OHL(callbacks.Plugin):
 		if(self._checkCPO(irc, msg)):
 		    
 			nicks = []
+			nick4 = []
 			
 			def unlimit():
 				irc.queueMsg(ircmsgs.unlimit(msg.args[0], 0))
@@ -90,7 +91,16 @@ class OHL(callbacks.Plugin):
 				if nick not in irc.state.channels[msg.args[0]].ops:
 					nicks.append(nick)
 			
-			irc.queueMsg(ircmsgs.kicks(msg.args[0], nicks, 'Reichskristallnacht'))
+			i = 0
+			for nick in nicks:
+				i = i+1
+				nick4.append(nick)
+				if (len(nick4) >= 4):
+					irc.queueMsg(ircmsgs.kicks(msg.args[0], nicks, 'Reichskristallnacht'))
+					nick4 = []
+				elif ((len(nicks) - i) < 4):
+					irc.queueMsg(ircmsgs.kicks(msg.args[0], nicks, 'Reichskristallnacht'))
+				
 			irc.noReply()
 				
 	def k(self, irc, msg, args, nicks):
