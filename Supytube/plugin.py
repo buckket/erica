@@ -71,7 +71,7 @@ class Supytube(callbacks.Plugin):
                 if(m):
                     r = requests.get("http://vimeo.com/api/v2/video/%s.json" % m.group(1))
                     data = json.loads(r.content)
-                    message = 'Title: %s, Views: %s, Likes; %s' % (ircutils.bold(data[0]['title']), ircutils.bold(data[0]['stats_number_of_plays']), ircutils.bold(data[0]['stats_number_of_likes']))
+                    message = 'Title: %s, Views: %s, Likes: %s' % (ircutils.bold(data[0]['title']), ircutils.bold(data[0]['stats_number_of_plays']), ircutils.bold(data[0]['stats_number_of_likes']))
                     message = message.encode("utf-8", "replace")
                     irc.queueMsg(ircmsgs.privmsg(msg.args[0], message))
 
