@@ -39,57 +39,9 @@ import supybot.conf as conf
 import supybot.log as log
 from urlparse import urlparse
 from datetime import timedelta
-import urllib
-
-import xml.sax
-
-class YoutubeHandler(xml.sax.handler.ContentHandler):
-    def __init__(self):
-        self.inTitle = 0
-        self.inAuthor = 0
-        self.inName = 0
-        self.title = ''
-        self.author = ''
-        self.rating = ''
-        self.rating_count = ''
-        self.views = ''
-        self.duration = ''
-       
-        
-    def startElement(self, name, attributes):
-        if(name == 'title'):
-            self.title = ''
-            self.inTitle = 1
-        if(name == 'author'):
-            self.author = ''
-            self.inAuthor = 1
-        if(name == 'name'):
-            self.inName = 1
-        if(name == 'gd:rating'):
-            self.rating_count = attributes.getValue('numRaters')
-          
-            # Compute percentage rating based on the average rating and the maximum rating 
-            self.rating = ( float(attributes.getValue('average')) / float(attributes.getValue('max')) ) * 100
-            self.inRatingCount = 1
-        if(name == 'yt:statistics'):
-            self.views = attributes.getValue('viewCount')
-            self.inViews = 1
-        if(name == 'yt:duration'):
-            self.duration = timedelta(seconds = float(attributes.getValue('seconds')))
-            
-    def characters(self,data):
-        if(self.inTitle):
-            self.title += data
-        if(self.inAuthor and self.inName):
-            self.author += data
-
-    def endElement(self,name):
-        if(name == 'title'):
-            self.inTitle=0
-        if(name == 'author'):
-            self.inAuthor = 0
-        if(name == 'name'):
-            self.inName = 0       
+import re
+import json
+import requests
 
 class Supytube(callbacks.Plugin):
     """Add the help for "@plugin help Supytube" here
@@ -97,36 +49,30 @@ class Supytube(callbacks.Plugin):
     threaded = True
 
     def doPrivmsg(self, irc, msg):
-	    if(self.registryValue('enable',msg.args[0])):
-		# If this is a youtube link, commence lookup
-		if(msg.args[1].find("youtube") != -1):
-		    for word in msg.args[1].split(' '):
-			if(word.find("youtube") != -1):
-			    videoid = urlparse(word)[4].split('=')[1].split('&')[0]
-
-			    f = urllib.urlopen('http://gdata.youtube.com/feeds/videos/%s' % (videoid))
-			    parser = xml.sax.make_parser()
-			    handler = YoutubeHandler()
-			    parser.setContentHandler(handler)
-			    parser.parse(f)
-			    
-			    #log.critical('Title: %s' % handler.title)
-			    #log.critical('Author: %s' % handler.author)
-			    #log.critical('Rating: %s' % handler.rating)
-			    #log.critical('Views: %s' % handler.views)
-			    #log.critical('Rating Count: %s' % handler.rating_count)
-			    #log.critical('Duration: %s' % handler.duration)
-			    
-			    # check for empty rating and views
-			    handler.rating = handler.rating if handler.rating else 0
-			    handler.views = handler.views if handler.views else 0
-			    
-			    message = 'Title: %s, Views: %s, Rating: %s%%' % (ircutils.bold(handler.title), ircutils.bold(handler.views),ircutils.bold(round(float(handler.rating))))
-			    #message = unicode( message, "utf-8")
-			    message = message.encode("utf-8", "replace")
-			    irc.queueMsg(ircmsgs.privmsg(msg.args[0],message))
+        if(self.registryValue('enable', msg.args[0])):
+            # If this is a youtube link, commence lookup
+            if(msg.args[1].find("youtube") != -1 or msg.args[1].find("youtu.be") != -1):
+                youtube_pattern = re.compile('(?:www\.)?youtu(?:be\.com/watch\?v=|\.be/)(\w*)(&(amp;)?[\w\?=]*)?')
                 
-            
-            
+                m = youtube_pattern.search(msg.args[1]);
+                if(m):
+                    r = requests.get('http://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=json' % m.group(1))
+                    data = json.loads(r.content)
+                    likes = float(data['entry']["yt$rating"]['numLikes'])
+                    dislikes = float(data['entry']["yt$rating"]['numDislikes'])
+                    rating = (likes/(likes+dislikes))*100
+                    message = 'Title: %s, Views: %s, Rating: %s%%' % (ircutils.bold(data['entry']['title']['$t']), ircutils.bold(data['entry']['yt$statistics']['viewCount']), ircutils.bold(round(float(rating))))
+                    message = message.encode("utf-8", "replace")
+                    irc.queueMsg(ircmsgs.privmsg(msg.args[0], message))
+                
+            if(msg.args[1].find("vimeo") != -1):
+                vimeo_pattern = re.compile('vimeo.com/(\\d+)')
+                m = vimeo_pattern.search(msg.args[1]);
+                if(m):
+                    r = requests.get("http://vimeo.com/api/v2/video/%s.json" % m.group(1))
+                    data = json.loads(r.content)
+                    message = 'Title: %s, Views: %s, Likes; %s' % (ircutils.bold(data[0]['title']), ircutils.bold(data[0]['stats_number_of_plays']), ircutils.bold(data[0]['stats_number_of_likes']))
+                    message = message.encode("utf-8", "replace")
+                    irc.queueMsg(ircmsgs.privmsg(msg.args[0], message))
 
 Class = Supytube
