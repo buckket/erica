@@ -52,7 +52,7 @@ class Supytube(callbacks.Plugin):
         if(self.registryValue('enable', msg.args[0])):
             # If this is a youtube link, commence lookup
             if(msg.args[1].find("youtube") != -1 or msg.args[1].find("youtu.be") != -1):
-                youtube_pattern = re.compile('(?:www\.)?youtu(?:be\.com/watch\?v=|\.be/)(\w*)(&(amp;)?[\w\?=]*)?')
+                youtube_pattern = re.compile('(?:www\.)?youtu(?:be\.com/watch\?v=|\.be/)([\w\?=\-]*)(&(amp;)?[\w\?=]*)?')
                 
                 m = youtube_pattern.search(msg.args[1]);
                 if(m):
