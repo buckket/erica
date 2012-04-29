@@ -634,22 +634,6 @@ class Radio(callbacks.Plugin):
 			pass
 			
 	rremind = wrap(rremind, ['somethingWithoutSpaces', optional('somethingWithoutSpaces')])
-	
-	def remindget(self, irc, msg, args):
-		result = self._radioQuery('show');
-		showid = result['showid']
-		
-		result = self._radioQuery('dj')
-		djid = result['djid']
-		
-		temp = []
-		
-		result = self._radioQuery('remindget', {'showid':showid, 'djid':djid})
-		for key in result['remindGet']:
-			temp.append(u"%s aufwachen! Ein Remind für dich gefunden!" % result['remindGet'][key])
-			
-		reply = u" %s " % ' | '.join(temp)
-		irc.reply(reply.encode('utf-8'))
 						
 	def _radioQuery(self, function, parameters={}):
 
