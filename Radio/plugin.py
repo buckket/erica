@@ -98,7 +98,11 @@ class Radio(callbacks.Plugin):
 				# dj started streaming
 
 				elif ((result['djid'] != None) and (self.lastDJ == None)):
-					announce = u'%s strömt jetzt' % (result['dj'])
+					isPlanned = self._radioQuery('show');
+					if (isPlanned['showtype'] == 'PLANNED'):
+						announce = u'%s stömt jetzt "%s" für %s' % (isPlanned['showdj'], isPlanned['showname'], formatTimespan(isPlanned['showend'] - int(time.time())))
+					else:
+						announce = u'%s strömt jetzt' % (result['dj'])
 					
 					self._radioCheckReminds(irc)
 					
