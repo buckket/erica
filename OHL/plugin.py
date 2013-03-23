@@ -37,6 +37,7 @@ import supybot.schedule as schedule
 import supybot.ircmsgs as ircmsgs
 import supybot.ircdb as ircdb
 
+from random import randint
 
 import socket
 import time
@@ -45,257 +46,280 @@ import GeoIP
 
 
 class OHL(callbacks.Plugin):
-	"""Oberste Heeresleitung"""
-	
-	threaded = True
-	
-	def doJoin(self, irc, msg):
-	    
-		# autoGhost onJoin
-		if(self.registryValue('ownerNick') == msg.nick):
-			self._autoGhost(irc, msg)
-		
-		# mibbit onJoin detection
-		if(self.registryValue('mibbitAnnounce',msg.args[0])):
-			if(msg.host.find('mibbit.com') != -1):
-				ip = self._numToDottedQuad(msg.user)
-				record = self._record_by_addr(ip)
-				if record:
-					reply = u'mibbit (%s)' % (unicode(record['country_code'], 'iso-8859-1'))
-					irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply.encode('utf-8')))
-	
-	def doNick(self, irc, msg):
+    """Oberste Heeresleitung"""
+    
+    threaded = True
+    annoy = []
+    annoyChannels = ['#krautchan']
+    annoyText = [u'hai {0} :3',
+        u'oh hai {0}, du hier? :3',
+        u'hey {0} :3',
+        u'hey {0}!',
+        u'huhu {0} :3',
+        u'harro {0} :3',
+        u'moin {0} :3',
+        u'auch: hai {0}',
+        u'hai {0}',
+        u'hi {0}',
+        u'{0}!',
+        u'oh, {0}!',
+        u'Hallo, {0}. :3']
+    
+    def doJoin(self, irc, msg):
         
-		#autoGhost onNickchange
-		if(self.registryValue('ownerNick') == msg.args[0]):
-			self._autoGhost(irc, msg)
-			
-			
-	def shoa(self, irc, msg, args):
-		"""
-		Shoa ist anberaumt
-		"""
-		
-		if(self._checkCPO(irc, msg)):
-		    
-			nicks = []
-			nick4 = []
-			
-			def unlimit():
-				irc.queueMsg(ircmsgs.unlimit(msg.args[0], 0))
-				
-			irc.queueMsg(ircmsgs.limit(msg.args[0], 1))  
-			schedule.addEvent(unlimit, time.time() + 3*60)
-			
-			for nick in irc.state.channels[msg.args[0]].users:
-				if nick not in irc.state.channels[msg.args[0]].ops:
-					nicks.append(nick)
-			
-			i = 0
-			for nick in nicks:
-				i = i+1
-				nick4.append(nick)
-				if (len(nick4) >= 4):
-					irc.queueMsg(ircmsgs.kicks(msg.args[0], nicks, 'Reichskristallnacht'))
-					nick4 = []
-				elif ((len(nicks) - i) < 4):
-					irc.queueMsg(ircmsgs.kicks(msg.args[0], nicks, 'Reichskristallnacht'))
-				
-			irc.noReply()
-				
-	def k(self, irc, msg, args, nicks):
-		"""[user] ... [user]
-		Kick mit Timeban
-		"""
+        # autoGhost onJoin
+        if(self.registryValue('ownerNick') == msg.nick):
+            self._autoGhost(irc, msg)
+        
+        # mibbit onJoin detection
+        if(self.registryValue('mibbitAnnounce',msg.args[0])):
+            if(msg.host.find('mibbit.com') != -1):
+                ip = self._numToDottedQuad(msg.user)
+                record = self._record_by_addr(ip)
+                if record:
+                    reply = u'mibbit (%s)' % (unicode(record['country_code'].lower(), 'iso-8859-1'))
+                    irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply.encode('utf-8')))
 
-		if(self._checkCPO(irc, msg)):
-			
-			hostmasks = []
-			
-			for nick in nicks:
-				prefix = irc.state.nickToHostmask(nick)
-				user = ircutils.userFromHostmask(prefix)
-				host = ircutils.hostFromHostmask(prefix)
-			
-				hostmask = '*!*@%s' % host
-				if(host.find('mibbit.com') != -1):
-					hostmask = '*!%s@*.mibbit.com' % user
-					hostmasks.append(hostmask)
-					hostmask = '*!*@%s' % self._numToDottedQuad(user)
-					
-				hostmasks.append(hostmask)
-			
-			irc.queueMsg(ircmsgs.bans(msg.args[0], hostmasks))
-			irc.queueMsg(ircmsgs.kicks(msg.args[0], nicks, 'Your behavior is not conducive to the desired environment.'))
-			
-			def unban():
-				irc.queueMsg(ircmsgs.unbans(msg.args[0], hostmasks))
-			
-			schedule.addEvent(unban, time.time() + 900)
-			
-		irc.noReply()
-			
-	k = wrap(k, [many('nickInChannel')])
-	
-	
-	#mibbit
-	def mibbit(self, irc, msg, args, nick):
-		"""<nick>
-		Mibbit-Check auf <nick>
-		"""
-		
-		prefix = irc.state.nickToHostmask(nick)
-		user = ircutils.userFromHostmask(prefix)
-		host = ircutils.hostFromHostmask(prefix)
-		if(host.find('mibbit.com') != -1):
-			ip = self._numToDottedQuad(user)
-			record = self._record_by_addr(ip)
-			if record:
-				reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
-			else:
-				reply = u'geoIP Fehler!'
-		else:
-			reply = u'%s benutzt kein mibbit' % nick
-		irc.reply(reply.encode('utf-8'))
-	mibbit = wrap(mibbit, ['nickInChannel'])
-	
-	def mibbits(self, irc, msg, args):
-		"""
-		Zeigt alle mibbit-Benutzer im Kanal an
-		"""
-		
-		mibbits = []
-		for nick in irc.state.channels[msg.args[0]].users:
-			prefix = irc.state.nickToHostmask(nick)
-			user = ircutils.userFromHostmask(prefix)
-			host = ircutils.hostFromHostmask(prefix)
-			if(host.find('mibbit.com') != -1):
-				ip = self._numToDottedQuad(user)
-				record = self._record_by_addr(ip)
-				if record:
-					mibbits.append(u'%s (%s, %s)' % (nick, ip, self._geoip_city_check(record)))
-				else:
-					mibbits.append('%s (geoIP Fehler)' % (nick))
-		if len(mibbits) > 0:
-			reply =  u'mibbits: %s' % (', '.join(mibbits))
-		else:
-			reply = u'Keine mibbits entdeckt!'
-		irc.reply(reply.encode('utf-8'))
-	
-	#geoip
-	def geoip(self, irc, msg, args, ip):
-		"""<IP>
-		Zeigt GeoIP Infos zu <IP> an
-		"""
-		
-		record = self._record_by_addr(ip)
-		if record:
-			reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
-		else:
-			reply = u'geoIP Fehler!'
-		irc.reply(reply.encode('utf-8'))
-	geoip = wrap(geoip, ['ip'])
-	
-	def hex2ip(self, irc, msg, args, iphex):
-		"""<HexIP>
-		Wandelt 8Bit-Hexstring in IP um und gibt GeoIP Infos aus
-		"""
-		
-		ip = self._numToDottedQuad(iphex)
-		if ip and len(iphex) == 8:
-			record = self._record_by_addr(ip)
-			if record:
-				reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
-			else:
-				reply = u'geoIP Fehler!'
-		else:
-			reply = u'Invalide Eingabe'
-		irc.reply(reply.encode('utf-8'))
-	hex2ip = wrap(hex2ip, ['text'])
-	
-	def host2ip(self, irc, msg, args, hostname):
-		"""<hostname>
-		Wandelt <hostname> in IP um und gibt GeoIP Infos aus
-		"""
-		
-		try:
-			ip = socket.gethostbyname(hostname)
-			if ip:
-				record = self._record_by_addr(ip)
-				if record:
-					reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
-				else:
-					reply = u'geoIP Fehler!'
-			
-		except:
-			reply = u'gethostbyname() Error'
-			
-		irc.reply(reply.encode('utf-8'))
-	host2ip = wrap(host2ip, ['text'])
-	
-	def ip2host(self, irc, msg, args, ip):
-		"""<ip>
-		Wandelt <ip> in hostname um und gibt GeoIP Infos aus
-		"""
-		
-		try:
-			hostname = socket.gethostbyaddr(ip)
-			hostname = hostname[0]
-			if hostname:
-				record = self._record_by_addr(ip)
-				if record:
-					reply = u'%s (%s)' % (hostname, self._geoip_city_check(record))
-				else:
-					reply = u'geoIP Fehler!'
-		except:
-			reply = u'gethostbyaddr() Error'
-			
-		irc.reply(reply.encode('utf-8'))
-	ip2host = wrap(ip2host, ['ip'])
-	
-	
-	def _autoGhost(self, irc, msg):
-		if(msg.host != self.registryValue('ownerHost')):
-			irc.queueMsg(ircmsgs.privmsg('NickServ', 'GHOST %s %s' % (self.registryValue('ownerNick'),self.registryValue('ownerPass'))))
-	
-	def _record_by_addr(self, ip):
-		gi = GeoIP.open(self.registryValue('geoipdb'), GeoIP.GEOIP_STANDARD)
-		try:
-			return gi.record_by_addr(ip)
-		except:
-			return False
-			
-	def _geoip_city_check(self, record):
-			if 'city' in record and 'country_code' in record:
-				return u'%s, %s' % (unicode(record['country_code'], 'iso-8859-1'), unicode(record['city'], 'iso-8859-1'))
-			else:
-				return u'%s' % (unicode(record['country_code'], 'iso-8859-1'))
-				
-	def _checkCPO(self, irc, msg):
-		if not irc.isChannel(msg.args[0]):
-			irc.reply('Muss in einem Kanal gesendet werden!')
-			return False
-		elif msg.nick not in irc.state.channels[msg.args[0]].ops and not ircdb.checkCapability(msg.prefix, 'admin'):
-			irc.reply('Als ob!')
-			return False
-		elif irc.nick not in irc.state.channels[msg.args[0]].ops:
-			irc.reply('%s braucht op ;_;' % irc.nick)
-			return False
-		else:
-			return True
-	
-	def _numToDottedQuad(self, n):
-		try:
-			n = long(n,16)
-			d = 256 * 256 * 256
-			q = []
-			while d > 0:
-				m,n = divmod(n,d)
-				q.append(str(m))
-				d = d/256
-			return '.'.join(q)
-		except:
-			return False
+        if msg.args[0] in self.annoyChannels:
+            if msg.nick in self.annoy:
+                tmpl = self.annoyText[randint(0,len(self.annoyText)-1)]
+                tmpl = tmpl.format(msg.nick)
+                def annoy():
+                    irc.queueMsg(ircmsgs.privmsg(msg.args[0], tmpl.encode('utf-8')))
+                schedule.addEvent(annoy, time.time()+randint(1,30))
+    
+    def doNick(self, irc, msg):
+        
+        #autoGhost onNickchange
+        if(self.registryValue('ownerNick') == msg.args[0]):
+            self._autoGhost(irc, msg)
+            
+            
+    def shoa(self, irc, msg, args):
+        """
+        Shoa ist anberaumt
+        """
+        
+        if(self._checkCPO(irc, msg)):
+            
+            nicks = []
+            nick4 = []
+            
+            def unlimit():
+                irc.queueMsg(ircmsgs.unlimit(msg.args[0], 0))
+                
+            irc.queueMsg(ircmsgs.limit(msg.args[0], 1))  
+            schedule.addEvent(unlimit, time.time() + 3*60)
+            
+            for nick in irc.state.channels[msg.args[0]].users:
+                if nick not in irc.state.channels[msg.args[0]].ops:
+                    nicks.append(nick)
+            
+            i = 0
+            for nick in nicks:
+                i = i+1
+                nick4.append(nick)
+                if (len(nick4) >= 4):
+                    irc.queueMsg(ircmsgs.kicks(msg.args[0], nicks, 'Reichskristallnacht'))
+                    nick4 = []
+                elif ((len(nicks) - i) < 4):
+                    irc.queueMsg(ircmsgs.kicks(msg.args[0], nicks, 'Reichskristallnacht'))
+                
+            irc.noReply()
+                
+    def k(self, irc, msg, args, nicks):
+        """[user] ... [user]
+        Kick mit Timeban
+        """
+
+        if(self._checkCPO(irc, msg)):
+            
+            hostmasks = []
+            
+            for nick in nicks:
+                prefix = irc.state.nickToHostmask(nick)
+                user = ircutils.userFromHostmask(prefix)
+                host = ircutils.hostFromHostmask(prefix)
+            
+                hostmask = '*!*@%s' % host
+                if(host.find('mibbit.com') != -1):
+                    hostmask = '*!%s@*.mibbit.com' % user
+                    hostmasks.append(hostmask)
+                    hostmask = '*!*@%s' % self._numToDottedQuad(user)
+                    
+                hostmasks.append(hostmask)
+            
+            irc.queueMsg(ircmsgs.bans(msg.args[0], hostmasks))
+            irc.queueMsg(ircmsgs.kicks(msg.args[0], nicks, 'Your behavior is not conducive to the desired environment.'))
+            
+            def unban():
+                irc.queueMsg(ircmsgs.unbans(msg.args[0], hostmasks))
+            
+            schedule.addEvent(unban, time.time() + 900)
+            
+        irc.noReply()
+            
+    k = wrap(k, [many('nickInChannel')])
+    
+    
+    #mibbit
+    def mibbit(self, irc, msg, args, nick):
+        """<nick>
+        Mibbit-Check auf <nick>
+        """
+        
+        prefix = irc.state.nickToHostmask(nick)
+        user = ircutils.userFromHostmask(prefix)
+        host = ircutils.hostFromHostmask(prefix)
+        if(host.find('mibbit.com') != -1):
+            ip = self._numToDottedQuad(user)
+            record = self._record_by_addr(ip)
+            if record:
+                reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
+            else:
+                reply = u'geoIP Fehler!'
+        else:
+            reply = u'%s benutzt kein mibbit' % nick
+        irc.reply(reply.encode('utf-8'))
+    mibbit = wrap(mibbit, ['nickInChannel'])
+    
+    def mibbits(self, irc, msg, args):
+        """
+        Zeigt alle mibbit-Benutzer im Kanal an
+        """
+        
+        mibbits = []
+        for nick in irc.state.channels[msg.args[0]].users:
+            prefix = irc.state.nickToHostmask(nick)
+            user = ircutils.userFromHostmask(prefix)
+            host = ircutils.hostFromHostmask(prefix)
+            if(host.find('mibbit.com') != -1):
+                ip = self._numToDottedQuad(user)
+                record = self._record_by_addr(ip)
+                if record:
+                    mibbits.append(u'%s (%s, %s)' % (nick, ip, self._geoip_city_check(record)))
+                else:
+                    mibbits.append('%s (geoIP Fehler)' % (nick))
+        if len(mibbits) > 0:
+            reply =  u'mibbits: %s' % (', '.join(mibbits))
+        else:
+            reply = u'Keine mibbits entdeckt!'
+        irc.reply(reply.encode('utf-8'))
+    
+    #geoip
+    def geoip(self, irc, msg, args, ip):
+        """<IP>
+        Zeigt GeoIP Infos zu <IP> an
+        """
+        
+        record = self._record_by_addr(ip)
+        if record:
+            reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
+        else:
+            reply = u'geoIP Fehler!'
+        irc.reply(reply.encode('utf-8'))
+    geoip = wrap(geoip, ['ip'])
+    
+    def hex2ip(self, irc, msg, args, iphex):
+        """<HexIP>
+        Wandelt 8Bit-Hexstring in IP um und gibt GeoIP Infos aus
+        """
+        
+        ip = self._numToDottedQuad(iphex)
+        if ip and len(iphex) == 8:
+            record = self._record_by_addr(ip)
+            if record:
+                reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
+            else:
+                reply = u'geoIP Fehler!'
+        else:
+            reply = u'Invalide Eingabe'
+        irc.reply(reply.encode('utf-8'))
+    hex2ip = wrap(hex2ip, ['text'])
+    
+    def host2ip(self, irc, msg, args, hostname):
+        """<hostname>
+        Wandelt <hostname> in IP um und gibt GeoIP Infos aus
+        """
+        
+        try:
+            ip = socket.gethostbyname(hostname)
+            if ip:
+                record = self._record_by_addr(ip)
+                if record:
+                    reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
+                else:
+                    reply = u'geoIP Fehler!'
+            
+        except:
+            reply = u'gethostbyname() Error'
+            
+        irc.reply(reply.encode('utf-8'))
+    host2ip = wrap(host2ip, ['text'])
+    
+    def ip2host(self, irc, msg, args, ip):
+        """<ip>
+        Wandelt <ip> in hostname um und gibt GeoIP Infos aus
+        """
+        
+        try:
+            hostname = socket.gethostbyaddr(ip)
+            hostname = hostname[0]
+            if hostname:
+                record = self._record_by_addr(ip)
+                if record:
+                    reply = u'%s (%s)' % (hostname, self._geoip_city_check(record))
+                else:
+                    reply = u'geoIP Fehler!'
+        except:
+            reply = u'gethostbyaddr() Error'
+            
+        irc.reply(reply.encode('utf-8'))
+    ip2host = wrap(ip2host, ['ip'])
+    
+    
+    def _autoGhost(self, irc, msg):
+        if(msg.host != self.registryValue('ownerHost')):
+            irc.queueMsg(ircmsgs.privmsg('NickServ', 'GHOST %s %s' % (self.registryValue('ownerNick'),self.registryValue('ownerPass'))))
+    
+    def _record_by_addr(self, ip):
+        gi = GeoIP.open(self.registryValue('geoipdb'), GeoIP.GEOIP_STANDARD)
+        try:
+            return gi.record_by_addr(ip)
+        except:
+            return False
+            
+    def _geoip_city_check(self, record):
+            if 'city' in record and 'country_code' in record:
+                return u'%s, %s' % (unicode(record['country_code'].lower(), 'iso-8859-1'), unicode(record['city'], 'iso-8859-1'))
+            else:
+                return u'%s' % (unicode(record['country_code'], 'iso-8859-1'))
+                
+    def _checkCPO(self, irc, msg):
+        if not irc.isChannel(msg.args[0]):
+            irc.reply('Muss in einem Kanal gesendet werden!')
+            return False
+        elif msg.nick not in irc.state.channels[msg.args[0]].ops and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.reply('Als ob!')
+            return False
+        elif irc.nick not in irc.state.channels[msg.args[0]].ops:
+            irc.reply('%s braucht op ;_;' % irc.nick)
+            return False
+        else:
+            return True
+    
+    def _numToDottedQuad(self, n):
+        try:
+            n = long(n,16)
+            d = 256 * 256 * 256
+            q = []
+            while d > 0:
+                m,n = divmod(n,d)
+                q.append(str(m))
+                d = d/256
+            return '.'.join(q)
+        except:
+            return False
 
 Class = OHL
 
