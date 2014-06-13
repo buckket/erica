@@ -53,18 +53,23 @@ class Supytube(callbacks.Plugin):
             # If this is a youtube link, commence lookup
             if(msg.args[1].find("youtube") != -1 or msg.args[1].find("youtu.be") != -1):
                 youtube_pattern = re.compile('(?:www\.)?youtu(?:be\.com/watch\?v=|\.be/)([\w\?=\-]*)(&(amp;)?[\w\?=]*)?')
-                
+
                 m = youtube_pattern.search(msg.args[1]);
                 if(m):
                     r = requests.get('http://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=json' % m.group(1))
                     data = json.loads(r.content)
-                    likes = float(data['entry']["yt$rating"]['numLikes'])
-                    dislikes = float(data['entry']["yt$rating"]['numDislikes'])
-                    rating = (likes/(likes+dislikes))*100
-                    message = 'Title: %s, Views: %s, Rating: %s%%' % (ircutils.bold(data['entry']['title']['$t']), ircutils.bold(data['entry']['yt$statistics']['viewCount']), ircutils.bold(round(float(rating))))
+                    title = data['entry']['title']['$t']
+                    views = data['entry']['yt$statistics']['viewCount'] if 'yt$statistics' in data['entry'] else 0
+                    likes = float(data['entry']["yt$rating"]['numLikes']) if "yt$rating" in data['entry'] else 0
+                    dislikes = float(data['entry']["yt$rating"]['numDislikes']) if "yt$rating" in data['entry'] else 0
+                    if (likes + dislikes) > 0:
+                        rating = '%s%%' % round((likes/(likes+dislikes))*100)
+                    else:
+                        rating = 'NaN'
+                    message = 'Title: %s, Views: %s, Rating: %s' % (ircutils.bold(title), ircutils.bold(views), ircutils.bold(rating))
                     message = message.encode("utf-8", "replace")
                     irc.queueMsg(ircmsgs.privmsg(msg.args[0], message))
-                
+
             if(msg.args[1].find("vimeo") != -1):
                 vimeo_pattern = re.compile('vimeo.com/(\\d+)')
                 m = vimeo_pattern.search(msg.args[1]);
