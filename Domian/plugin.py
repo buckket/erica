@@ -38,6 +38,8 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 
+import supybot.log as log
+
 from time import mktime, time
 from datetime import datetime
 import feedparser
@@ -77,7 +79,8 @@ class Domian(callbacks.Plugin):
             else:
                 starts_in = formatTimespan(int(mktime(nextshow['showstart'].timetuple()) - time()))
                 reply = u'Nächste Sendung am %s (%s) - in %s' % (nextshow['showstart'].strftime('%d.%m.%Y um %H:%M'), nextshow.description, starts_in)
-        except:
+        except Exception, e:
+            log.error('Domian: %s' % repr(e))
             reply = u'Noch keine Daten vorhanden!'
             
         irc.reply(reply.encode('utf-8'))
