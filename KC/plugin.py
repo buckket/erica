@@ -43,90 +43,80 @@ from urlparse import urlunparse
 import os
 import re
 
+from random import choice
+
+
 class KC(callbacks.Plugin):
-	"""Add the help for "@plugin help KC" here
-	This should describe *how* to use this plugin."""
-	threaded = True
-	
-	def doPrivmsg(self, irc, msg):
-		if(self.registryValue('urlmodify',msg.args[0])):
-			
-			toModify = {
-			'what.cd' : { 'http' : 'what.cd', 'https' : 'ssl.what.cd'},
-			'awesome-hd.net' : { 'http' : 'awesome-hd.net', 'https' : 'ssl.awesome-hd.net'}
-			}
-			
-			tmp = []
-			
-			for name in toModify:
-				if(msg.args[1].find(name) != -1):
-					for word in msg.args[1].split(' '):
-						if(word.find(name) != -1):
-							url = urlparse(word)
-							if (url[0] == 'http'):
-								url = urlunparse(('https', toModify[name]['https'], url[2], url[3], url[4], url[5]))
-								tmp.append(url)
-							if (url[0] == 'https'):
-								url = urlunparse(('http', toModify[name]['http'], url[2], url[3], url[4], url[5]))
-								tmp.append(url)
-			if len(tmp) > 0:
-				tmp.reverse()
-				reply = ' '.join(tmp)
-				irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply))
+    """Add the help for "@plugin help KC" here
+    This should describe *how* to use this plugin."""
+    threaded = True
+    
+    # def kczip(self, irc, msg, args, text):
+    #   """<kcurl>
+    #   
+    #   Speichert einen Faden von KC
+    #   """
+    #   if(re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)):
+    #       match = re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)
+    #       threadid = match.group(2)
+    #       board = match.group(1)
+    #       irc.reply(u"Versuche Faden %s von /%s/ zu speichern." % (threadid, board))
+    #       os.system("/home/supybot/krautdmp.pl " + text)
+    #       if(os.path.isfile("/var/www/kczip/%s-%s/%s-%s.zip" % (board, threadid, board, threadid))):
+    #           irc.reply(u"Fertig: http://uncloaked.net/kczip/%s-%s/%s-%s.zip" % (board, threadid, board, threadid))
+    #       else:
+    #           irc.reply(u"Fehler!")
+    #   else:
+    #       reply = u"Keine gültige URL"
+    #   
+    # kczip = wrap(kczip, ['text'])
+    # 
+    # def kcpng(self, irc, msg, args, text):
+    #   """<kcurl>
+    #   
+    #   Speichert einen Faden als PNG von KC
+    #   """
+    #   if(re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)):
+    #       match = re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)
+    #       threadid = match.group(2)
+    #       board = match.group(1)
+    #       irc.reply(u"Versuche Faden %s von /%s/ zu speichern." % (threadid, board))
+    #       os.system("wkhtmltoimage-i386 -n --width 1280 %s /var/www/kcpng/%s-%s.png" % (text, board, threadid))
+    #       if(os.path.isfile("/var/www/kcpng/%s-%s.png" % (board, threadid))):
+    #           reply = u"Fertig: http://uncloaked.net/kcpng/%s-%s.png" % (board, threadid)
+    #       else:
+    #           reply = u"Fehler!"
+    #   else:
+    #       reply = u"Keine gültige URL"
+    #   irc.reply(reply.encode('utf-8'))
+    #   
+    # kcpng = wrap(kcpng, ['text'])
+    
+    def komturcode(self, irc, msg, args, nick):
+        """<nick>
+        
+        Autobeantworter zu Komturcodeanfragen
+        """
+       
+        if ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.queueMsg(ircmsgs.privmsg(msg.args[0], '%s: Falls du Opfer eines Netzwerkbans bist, diesen jedoch nicht verschuldet hast, wende dich an einen der drei Admins um einen Komturcode zu erhalten.' % nick))
 
-	# def kczip(self, irc, msg, args, text):
-	# 	"""<kcurl>
-	# 	
-	# 	Speichert einen Faden von KC
-	# 	"""
-	# 	if(re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)):
-	# 		match = re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)
-	# 		threadid = match.group(2)
-	# 		board = match.group(1)
-	# 		irc.reply(u"Versuche Faden %s von /%s/ zu speichern." % (threadid, board))
-	# 		os.system("/home/supybot/krautdmp.pl " + text)
-	# 		if(os.path.isfile("/var/www/kczip/%s-%s/%s-%s.zip" % (board, threadid, board, threadid))):
-	# 			irc.reply(u"Fertig: http://uncloaked.net/kczip/%s-%s/%s-%s.zip" % (board, threadid, board, threadid))
-	# 		else:
-	# 			irc.reply(u"Fehler!")
-	# 	else:
-	# 		reply = u"Keine gültige URL"
-	# 	
-	# kczip = wrap(kczip, ['text'])
-	# 
-	# def kcpng(self, irc, msg, args, text):
-	# 	"""<kcurl>
-	# 	
-	# 	Speichert einen Faden als PNG von KC
-	# 	"""
-	# 	if(re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)):
-	# 		match = re.match(r"http:\/\/krautchan\.net\/(.*)\/thread-(.*)\.html", text)
-	# 		threadid = match.group(2)
-	# 		board = match.group(1)
-	# 		irc.reply(u"Versuche Faden %s von /%s/ zu speichern." % (threadid, board))
-	# 		os.system("wkhtmltoimage-i386 -n --width 1280 %s /var/www/kcpng/%s-%s.png" % (text, board, threadid))
-	# 		if(os.path.isfile("/var/www/kcpng/%s-%s.png" % (board, threadid))):
-	# 			reply = u"Fertig: http://uncloaked.net/kcpng/%s-%s.png" % (board, threadid)
-	# 		else:
-	# 			reply = u"Fehler!"
-	# 	else:
-	# 		reply = u"Keine gültige URL"
-	# 	irc.reply(reply.encode('utf-8'))
-	# 	
-	# kcpng = wrap(kcpng, ['text'])
-	
-	def komturcode(self, irc, msg, args, nick):
-	    """<nick>
-	    
-	    Autobeantworter zu Komturcodeanfragen
-	    """
-	   
-	    if ircdb.checkCapability(msg.prefix, 'admin'):
-	        irc.queueMsg(ircmsgs.privmsg(msg.args[0], '%s: Falls du Opfer eines Netzwerkbans bist, diesen jedoch nicht verschuldet hast, wende dich an einen der drei Admins um einen Komturcode zu erhalten.' % nick))
+    komturcode = wrap(komturcode, ['nickInChannel'])
 
-	komturcode = wrap(komturcode, ['nickInChannel'])
-	    
 
+    def jn(self, irc, msg, args):
+        irc.reply(choice(('Ja', 'Nein')))
+        
+
+    def choose(self, irc, msg, args, options):
+        try:
+            reply = choice(options)
+        except:
+            reply = u'Depp.'
+        finally:
+            irc.reply(reply)
+    choose = wrap(choose, [many('anything')])
+    
 
 Class = KC
 
