@@ -1,0 +1,6 @@
+[submodule "Scherbengericht"]
+	path = Scherbengericht
+	url = https://github.com/buckket/supybot-scherbengericht.git
+[submodule "RfK"]
+	path = RfK
+	url = https://github.com/buckket/supybot-rfk.git
