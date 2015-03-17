@@ -55,5 +55,5 @@ conf.registerGlobalValue(Twitter, 'accessKey',
     registry.String('', """Twitter OAuth access_key""", private=True))
 conf.registerGlobalValue(Twitter, 'accessSecret',
     registry.String('', """Twitter OAuth access_secret""", private=True))
-
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+conf.registerGlobalValue(Twitter, 'botNick',
+    registry.String('', """Twitter screen_name"""))
