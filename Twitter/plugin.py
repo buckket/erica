@@ -55,8 +55,7 @@ class Twitter(callbacks.Plugin):
         Returns the Twitter profile
         """
 
-        bot = self.registryValue('botNick')
-        irc.reply(u"http://twitter.com/{}".format(bot))
+        irc.reply(u"http://twitter.com/{}".format(self.registryValue('botNick')))
 
     twitter = wrap(twitter)
 
@@ -78,7 +77,8 @@ class Twitter(callbacks.Plugin):
             else:
                 message = utils.str.ellipsisify(text, 140)
                 status = api.update_status(status=message)
-            irc.reply(u"https://twitter.com/{bot}/status/{status_id}".format(bot=BOT, status_id=status.id))
+            irc.reply(u"https://twitter.com/{bot}/status/{status_id}".format(bot=self.registryValue('botNick'),
+                                                                             status_id=status.id))
         except tweepy.TweepError as e:
             irc.reply(u"Das hat nicht geklappt.")
 
