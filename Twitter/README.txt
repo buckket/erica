@@ -1,1 +1,5 @@
-Insert a description of your plugin here, with any notes, etc. about using it.
+Hello. This is Twitter.
+Inspired by https://github.com/dridde/oiler_in
+
+Requirements:
+- tweepy

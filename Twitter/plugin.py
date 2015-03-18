@@ -30,6 +30,7 @@
 
 import supybot.utils as utils
 from supybot.commands import *
+
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
@@ -48,7 +49,6 @@ class Twitter(callbacks.Plugin):
         self.__parent = super(Twitter, self)
         self.__parent.__init__(irc)
 
-
     def twitter(self, irc, msg, args):
         """
 
@@ -59,7 +59,6 @@ class Twitter(callbacks.Plugin):
 
     twitter = wrap(twitter)
 
-
     def _tweet(self, irc, text, tweet=None):
         try:
             api = self._get_twitter_api()
@@ -68,9 +67,9 @@ class Twitter(callbacks.Plugin):
                 if status_id:
                     if not text.startswith('@'):
                         username = api.get_status(status_id).user.screen_name
-                        text = u"@{} {}".format(username, text)
+                        text = "@{} {}".format(username, text)
                     message = utils.str.ellipsisify(text, 140)
-                    status = api.update_status(status=message,  in_reply_to_status_id=status_id)
+                    status = api.update_status(status=message, in_reply_to_status_id=status_id)
                 else:
                     irc.reply(u"Du musst mir schon einen Tweet geben, auf den sich der Unsinn beziehen soll.")
                     return
@@ -82,7 +81,6 @@ class Twitter(callbacks.Plugin):
         except tweepy.TweepError as e:
             irc.reply(u"Das hat nicht geklappt.")
 
-
     def tweet(self, irc, msg, args, text):
         """<text>
 
@@ -93,7 +91,6 @@ class Twitter(callbacks.Plugin):
 
     tweet = wrap(tweet, ["text"])
 
-
     def reply(self, irc, msg, args, tweet, text):
         """<tweet url or id> <text>
 
@@ -103,7 +100,6 @@ class Twitter(callbacks.Plugin):
         self._tweet(irc, text, tweet)
 
     reply = wrap(reply, ["somethingWithoutSpaces", "text"])
-
 
     def fav(self, irc, msg, args, tweet):
         """<tweet url or id>
@@ -119,8 +115,8 @@ class Twitter(callbacks.Plugin):
                 irc.reply(u"Alles klar.")
             except tweepy.TweepError as e:
                 irc.reply(u"Das hat nicht geklappt.")
-    fav = wrap(fav, ["somethingWithoutSpaces"])
 
+    fav = wrap(fav, ["somethingWithoutSpaces"])
 
     def rt(self, irc, msg, args, tweet):
         """<tweet url or id>
@@ -135,8 +131,8 @@ class Twitter(callbacks.Plugin):
                 irc.reply(u"Alles klar.")
             except tweepy.TweepError as e:
                 irc.reply("Das hat nicht geklappt.")
-    rt = wrap(rt, ['somethingWithoutSpaces'])
 
+    rt = wrap(rt, ['somethingWithoutSpaces'])
 
     def doPrivmsg(self, irc, msg):
         if ircmsgs.isCtcp(msg) and not ircmsgs.isAction(msg):
@@ -156,14 +152,12 @@ class Twitter(callbacks.Plugin):
                     except tweepy.TweepError as e:
                         return
 
-
     def _get_twitter_api(self):
         auth = tweepy.OAuthHandler(self.registryValue("consumerKey"),
                                    self.registryValue("consumerSecret"))
         auth.set_access_token(self.registryValue("accessKey"),
                               self.registryValue("accessSecret"))
         return tweepy.API(auth)
-
 
     def _get_status_id(self, tweet, search=False):
         regexp = re.compile(r"(?:https?://(?:[^.]+.)?twitter.com/(?P<username>[^/]*)/status(?:es)?/)?(?P<status_id>\d+)")
