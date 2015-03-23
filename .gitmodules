@@ -6,4 +6,4 @@
 	url = https://github.com/buckket/supybot-rfk.git
 [submodule "Twitter"]
 	path = Twitter
-	url = git@github.com:buckket/supybot-twitter.git
+	url = https://github.com/buckket/supybot-twitter.git
