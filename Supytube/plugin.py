@@ -119,7 +119,7 @@ class Supytube(callbacks.Plugin):
 
         Neustes Video von Ludger Winter
         """
-        message = self._channel_info('UC9fQbwN-UkOBtpPJ44yLFnQ')
+        message = self._channel_info('UCNqljVvVXoMv9T7dPTvg0JA')
         irc.reply(message)
 
     def schmacko(self, irc, msg, args):
