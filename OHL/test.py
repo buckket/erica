@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2011, MrLoom
+# Copyright (c) 2011-2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,3 @@ from supybot.test import *
 
 class OHLTestCase(PluginTestCase):
     plugins = ('OHL',)
-
-
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

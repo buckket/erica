@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2011, MrLoom
+# Copyright (c) 2011-2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,10 +28,7 @@
 
 ###
 
-"""
-Add a description of the plugin (to be presented to the user inside the wizard)
-here.  This should describe *what* the plugin does.
-"""
+"""Translate things using Bing Translate."""
 
 import supybot
 import supybot.world as world
@@ -41,14 +38,14 @@ import supybot.world as world
 __version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.authors.unknown
+__author__ = supybot.Author("buckket", "buckket", "buckket@cock.li")
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = '' # 'http://supybot.com/Members/yourname/Translate/download'
+__url__ = 'https://github.com/buckket/erica' # 'http://supybot.com/Members/yourname/Translate/download'
 
 import config
 import plugin
@@ -61,6 +58,3 @@ if world.testing:
 
 Class = plugin.Class
 configure = config.configure
-
-
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

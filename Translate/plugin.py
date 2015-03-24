@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2011, MrLoom
+# Copyright (c) 2011-2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@ import re
 
 
 class Translate(callbacks.Plugin):
-    """Bing Translate"""
+    """Translate things using Bing Translate."""
     
     def __init__(self, irc):
         self.__parent = super(Translate, self)
@@ -55,6 +55,10 @@ class Translate(callbacks.Plugin):
 
 
     def trans(self, irc, msg, args, text):
+        """[<from>-<to>] <text>
+
+        Translates <text> from <from> to <to>, guesses language otherwise
+        """
         parse, transFrom, transTo, transText = self._parseInput(text)
         
         if (parse):
@@ -79,6 +83,10 @@ class Translate(callbacks.Plugin):
 
 
     def languages(self, irc, msg, args):
+        """
+
+        Shows available languages for translation
+        """
         languages = []
         for language in self.allowedLanguages:
             languages.append("%s" % language)
@@ -140,6 +148,3 @@ class Translate(callbacks.Plugin):
 
 
 Class = Translate
-
-
-# vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

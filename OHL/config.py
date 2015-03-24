@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2011, MrLoom
+# Copyright (c) 2011-2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -55,4 +55,3 @@ conf.registerGlobalValue(OHL, 'ownerHost',
     registry.String('', """ownerHost""", private=True))
 conf.registerGlobalValue(OHL, 'ownerPass',
     registry.String('', """ownerPass""", private=True))
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

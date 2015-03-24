@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-
 ###
-# Copyright (c) 2011, MrLoom
+# Copyright (c) 2011-2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,7 +43,7 @@ import re
 
 
 class Reminder(callbacks.Plugin):
-    """Remind me, mighty Bot"""
+    """Remind me, mighty Bot."""
 
     threaded = True
     
@@ -59,8 +58,10 @@ class Reminder(callbacks.Plugin):
 
 
     def remind(self, irc, msg, args, rtime, reason):
-        """<time> (<reason>)
-        Reminds the user in <time>"""
+        """<time> [<reason>]
+
+        Reminds user in <time>, because of <reason>
+        """
         
         
         def rEvent():
@@ -106,6 +107,3 @@ class Reminder(callbacks.Plugin):
         
         
 Class = Reminder
-
-
-# vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

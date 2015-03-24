@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2007, Benjamin Rubin
+# Copyright (c) 2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -79,5 +80,53 @@ class Supytube(callbacks.Plugin):
                     message = 'Title: %s, Views: %s, Likes: %s' % (ircutils.bold(data[0]['title']), ircutils.bold(data[0]['stats_number_of_plays']), ircutils.bold(data[0]['stats_number_of_likes']))
                     message = message.encode("utf-8", "replace")
                     irc.queueMsg(ircmsgs.privmsg(msg.args[0], message))
+
+    def drache(self, irc, msg, args):
+        r = requests.get('https://gdata.youtube.com/feeds/api/users/drachenlord1510/uploads?v=2&alt=json&max-results=1')
+        data = json.loads(r.content)
+        url = 'https://www.youtube.com/watch?v=%s' % data['feed']['entry'][0]['media$group']['yt$videoid']['$t']
+        title = data['feed']['entry'][0]['title']['$t']
+        views = data['feed']['entry'][0]['yt$statistics']['viewCount'] if 'yt$statistics' in data['feed']['entry'][0] else 0
+        likes = float(data['feed']['entry'][0]["yt$rating"]['numLikes']) if "yt$rating" in data['feed']['entry'][0] else 0
+        dislikes = float(data['feed']['entry'][0]["yt$rating"]['numDislikes']) if "yt$rating" in data['feed']['entry'][0] else 0
+        if (likes + dislikes) > 0:
+            rating = '%s%%' % round((likes/(likes+dislikes))*100)
+        else:
+            rating = 'NaN'
+        message = 'Title: %s, Views: %s, Rating: %s -- %s' % (ircutils.bold(title), ircutils.bold(views), ircutils.bold(rating), url)
+        message = message.encode("utf-8", "replace")
+        irc.reply(message)
+
+    def drachenvlog(self, irc, msg, args):
+        r = requests.get('https://gdata.youtube.com/feeds/api/users/drachenvlog1510/uploads?v=2&alt=json&max-results=1')
+        data = json.loads(r.content)
+        url = 'https://www.youtube.com/watch?v=%s' % data['feed']['entry'][0]['media$group']['yt$videoid']['$t']
+        title = data['feed']['entry'][0]['title']['$t']
+        views = data['feed']['entry'][0]['yt$statistics']['viewCount'] if 'yt$statistics' in data['feed']['entry'][0] else 0
+        likes = float(data['feed']['entry'][0]["yt$rating"]['numLikes']) if "yt$rating" in data['feed']['entry'][0] else 0
+        dislikes = float(data['feed']['entry'][0]["yt$rating"]['numDislikes']) if "yt$rating" in data['feed']['entry'][0] else 0
+        if (likes + dislikes) > 0:
+            rating = '%s%%' % round((likes/(likes+dislikes))*100)
+        else:
+            rating = 'NaN'
+        message = 'Title: %s, Views: %s, Rating: %s -- %s' % (ircutils.bold(title), ircutils.bold(views), ircutils.bold(rating), url)
+        message = message.encode("utf-8", "replace")
+        irc.reply(message)
+
+    def ludger(self, irc, msg, args):
+        r = requests.get('https://gdata.youtube.com/feeds/api/users/UC9fQbwN-UkOBtpPJ44yLFnQ/uploads?v=2&alt=json&max-results=1')
+        data = json.loads(r.content)
+        url = 'https://www.youtube.com/watch?v=%s' % data['feed']['entry'][0]['media$group']['yt$videoid']['$t']
+        title = data['feed']['entry'][0]['title']['$t']
+        views = data['feed']['entry'][0]['yt$statistics']['viewCount'] if 'yt$statistics' in data['feed']['entry'][0] else 0
+        likes = float(data['feed']['entry'][0]["yt$rating"]['numLikes']) if "yt$rating" in data['feed']['entry'][0] else 0
+        dislikes = float(data['feed']['entry'][0]["yt$rating"]['numDislikes']) if "yt$rating" in data['feed']['entry'][0] else 0
+        if (likes + dislikes) > 0:
+            rating = '%s%%' % round((likes/(likes+dislikes))*100)
+        else:
+            rating = 'NaN'
+        message = 'Title: %s, Views: %s, Rating: %s -- %s' % (ircutils.bold(title), ircutils.bold(views), ircutils.bold(rating), url)
+        message = message.encode("utf-8", "replace")
+        irc.reply(message)
 
 Class = Supytube

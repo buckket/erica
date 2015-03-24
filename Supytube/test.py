@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2007, Benjamin Rubin
+# Copyright (c) 2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,6 +33,3 @@ from supybot.test import *
 
 class SupytubeTestCase(PluginTestCase):
     plugins = ('Supytube',)
-
-
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

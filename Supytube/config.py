@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2007, Benjamin Rubin
+# Copyright (c) 2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -47,4 +48,4 @@ Supytube = conf.registerPlugin('Supytube')
 
 
 # Channel Variables
-conf.registerChannelValue(Supytube,'enable',registry.Boolean('False',"""Enable Supytube in channel?"""))
+conf.registerChannelValue(Supytube, 'enable', registry.Boolean('False', """Enable Supytube in channel?"""))

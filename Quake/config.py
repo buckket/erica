@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2014, MrLoom
+# Copyright (c) 2014-2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,3 @@ Quake = conf.registerPlugin('Quake')
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(Quake, 'someConfigVariableName',
 #     registry.Boolean(False, """Help for someConfigVariableName."""))
-
-
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

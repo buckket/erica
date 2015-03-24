@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2014, MrLoom
+# Copyright (c) 2014-2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,3 @@ from supybot.test import *
 
 class QuakeTestCase(PluginTestCase):
     plugins = ('Quake',)
-
-
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

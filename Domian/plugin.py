@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
-
-
 ###
-# Copyright (c) 2012, MrLoom
+# Copyright (c) 2012-2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,12 +44,15 @@ import feedparser
 
 
 class Domian(callbacks.Plugin):
-    """Add the help for "@plugin help Domian" here
-    This should describe *how* to use this plugin."""
+    """Retrieve information about upcoming Domian shows."""
     
     threaded = True
 
     def domian(self, irc, msg, args):
+        """
+
+        Returns information about the next episode of Domian
+        """
         now = datetime.now()
         feed = feedparser.parse('http://nachtlager.de/go/de/feed/week')
         nextshow = None
@@ -186,6 +187,3 @@ def _formatTimespan(timespan, m):
       text = append_part(text, seconds, m['second_singular'], m['second_plural'])
 
    return(text)
-
-
-# vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

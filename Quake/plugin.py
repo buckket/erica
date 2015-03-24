@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2014, MrLoom
+# Copyright (c) 2014-2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,8 +38,7 @@ from pyquake3 import PyQuake3
 
 
 class Quake(callbacks.Plugin):
-    """Add the help for "@plugin help Quake" here
-    This should describe *how* to use this plugin."""
+    """Returns Q3 Arena server information."""
 
     def _natural_join(self, lst):
         l = len(lst)
@@ -52,7 +51,7 @@ class Quake(callbacks.Plugin):
     def q3(self, irc, msg, args):
         """
 
-        Return Q3 Arena server information
+        Returns Q3 Arena server information
         """
 
         server = PyQuake3('localhost:27960')

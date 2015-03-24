@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2010, MrLoom
+# Copyright (c) 2010-2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,9 +44,3 @@ KC = conf.registerPlugin('KC')
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(KC, 'someConfigVariableName',
 #     registry.Boolean(False, """Help for someConfigVariableName."""))
-
-conf.registerChannelValue(KC, 'urlmodify',
-    registry.Boolean(False, """Enables urlmodify"""))
-
-
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

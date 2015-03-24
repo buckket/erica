@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2007, Benjamin Rubin
+# Copyright (c) 2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -41,14 +42,14 @@ import supybot.world as world
 __version__ = "main"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author("Benjamin Rubin","Pici","bnrubin@gmail.com")
+__author__ = supybot.Author("Benjamin Rubin", "Pici", "bnrubin@gmail.com")
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://code.launchpad.net/~bnrubin/supytube/main'
+__url__ = 'https://github.com/buckket/erica'
 
 import config
 import plugin
@@ -61,6 +62,3 @@ if world.testing:
 
 Class = plugin.Class
 configure = config.configure
-
-
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

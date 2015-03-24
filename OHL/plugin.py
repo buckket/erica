@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2011, MrLoom
+# Copyright (c) 2011-2015, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,9 +44,8 @@ import time
 import GeoIP
 
 
-
 class OHL(callbacks.Plugin):
-    """Oberste Heeresleitung"""
+    """Oberste Heeresleitung."""
     
     threaded = True
     annoy = []
@@ -70,15 +69,6 @@ class OHL(callbacks.Plugin):
         # autoGhost onJoin
         if(self.registryValue('ownerNick') == msg.nick):
             self._autoGhost(irc, msg)
-        
-        # mibbit onJoin detection
-        if(self.registryValue('mibbitAnnounce',msg.args[0])):
-            if(msg.host.find('mibbit.com') != -1):
-                ip = self._numToDottedQuad(msg.user)
-                record = self._record_by_addr(ip)
-                if record:
-                    reply = u'mibbit (%s)' % (unicode(record['country_code'].lower(), 'iso-8859-1'))
-                    irc.queueMsg(ircmsgs.privmsg(msg.args[0], reply.encode('utf-8')))
 
         if msg.args[0] in self.annoyChannels:
             if msg.nick in self.annoy:
@@ -89,14 +79,13 @@ class OHL(callbacks.Plugin):
                 schedule.addEvent(annoy, time.time()+randint(1,30))
     
     def doNick(self, irc, msg):
-        
         #autoGhost onNickchange
         if(self.registryValue('ownerNick') == msg.args[0]):
             self._autoGhost(irc, msg)
-            
-            
+
     def shoa(self, irc, msg, args):
         """
+
         Shoa ist anberaumt
         """
         
@@ -129,7 +118,8 @@ class OHL(callbacks.Plugin):
                 
     def k(self, irc, msg, args, nicks):
         """[user] ... [user]
-        Kick mit Timeban
+
+        Rauswurf mit Zeitverbannung
         """
 
         if(self._checkCPO(irc, msg)):
@@ -142,11 +132,6 @@ class OHL(callbacks.Plugin):
                 host = ircutils.hostFromHostmask(prefix)
             
                 hostmask = '*!*@%s' % host
-                if(host.find('mibbit.com') != -1):
-                    hostmask = '*!%s@*.mibbit.com' % user
-                    hostmasks.append(hostmask)
-                    hostmask = '*!*@%s' % self._numToDottedQuad(user)
-                    
                 hostmasks.append(hostmask)
             
             irc.queueMsg(ircmsgs.bans(msg.args[0], hostmasks))
@@ -160,56 +145,12 @@ class OHL(callbacks.Plugin):
         irc.noReply()
             
     k = wrap(k, [many('nickInChannel')])
-    
-    
-    #mibbit
-    def mibbit(self, irc, msg, args, nick):
-        """<nick>
-        Mibbit-Check auf <nick>
-        """
-        
-        prefix = irc.state.nickToHostmask(nick)
-        user = ircutils.userFromHostmask(prefix)
-        host = ircutils.hostFromHostmask(prefix)
-        if(host.find('mibbit.com') != -1):
-            ip = self._numToDottedQuad(user)
-            record = self._record_by_addr(ip)
-            if record:
-                reply = u'%s (%s)' % (ip, self._geoip_city_check(record))
-            else:
-                reply = u'geoIP Fehler!'
-        else:
-            reply = u'%s benutzt kein mibbit' % nick
-        irc.reply(reply.encode('utf-8'))
-    mibbit = wrap(mibbit, ['nickInChannel'])
-    
-    def mibbits(self, irc, msg, args):
-        """
-        Zeigt alle mibbit-Benutzer im Kanal an
-        """
-        
-        mibbits = []
-        for nick in irc.state.channels[msg.args[0]].users:
-            prefix = irc.state.nickToHostmask(nick)
-            user = ircutils.userFromHostmask(prefix)
-            host = ircutils.hostFromHostmask(prefix)
-            if(host.find('mibbit.com') != -1):
-                ip = self._numToDottedQuad(user)
-                record = self._record_by_addr(ip)
-                if record:
-                    mibbits.append(u'%s (%s, %s)' % (nick, ip, self._geoip_city_check(record)))
-                else:
-                    mibbits.append('%s (geoIP Fehler)' % (nick))
-        if len(mibbits) > 0:
-            reply =  u'mibbits: %s' % (', '.join(mibbits))
-        else:
-            reply = u'Keine mibbits entdeckt!'
-        irc.reply(reply.encode('utf-8'))
-    
+
     #geoip
     def geoip(self, irc, msg, args, ip):
         """<IP>
-        Zeigt GeoIP Infos zu <IP> an
+
+        Zeigt GeoIP Informationen zu <IP> an
         """
         
         record = self._record_by_addr(ip)
@@ -222,7 +163,8 @@ class OHL(callbacks.Plugin):
     
     def hex2ip(self, irc, msg, args, iphex):
         """<HexIP>
-        Wandelt 8Bit-Hexstring in IP um und gibt GeoIP Infos aus
+
+        Wandelt 8-Bit-Hexstring in IP um und gibt GeoIP Informationen aus
         """
         
         ip = self._numToDottedQuad(iphex)
@@ -239,7 +181,8 @@ class OHL(callbacks.Plugin):
     
     def host2ip(self, irc, msg, args, hostname):
         """<hostname>
-        Wandelt <hostname> in IP um und gibt GeoIP Infos aus
+
+        Wandelt <hostname> in IP um und gibt GeoIP Informationen aus
         """
         
         try:
@@ -259,7 +202,8 @@ class OHL(callbacks.Plugin):
     
     def ip2host(self, irc, msg, args, ip):
         """<ip>
-        Wandelt <ip> in hostname um und gibt GeoIP Infos aus
+
+        Wandelt <ip> in hostname um und gibt GeoIP Informationens aus
         """
         
         try:
@@ -322,6 +266,3 @@ class OHL(callbacks.Plugin):
             return False
 
 Class = OHL
-
-
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
