@@ -35,18 +35,20 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
-
 import supybot.conf as conf
 import supybot.log as log
+
 from urlparse import urlparse
 from datetime import timedelta
+
 import re
 import json
 import requests
 
+
 class Supytube(callbacks.Plugin):
-    """Add the help for "@plugin help Supytube" here
-    This should describe *how* to use this plugin."""
+    """This plugin announces the title and other relevant information
+    about any Youtube or Vimeo link that is said in a channel."""
     threaded = True
 
     def doPrivmsg(self, irc, msg):
@@ -81,53 +83,5 @@ class Supytube(callbacks.Plugin):
                     message = message.encode("utf-8", "replace")
                     irc.queueMsg(ircmsgs.privmsg(msg.args[0], message))
 
-
-    def _channel_info(self,  channel):
-        r = requests.get('https://gdata.youtube.com/feeds/api/users/{}/uploads?v=2&alt=json&max-results=1'.format(channel))
-        data = json.loads(r.content)
-        url = 'https://www.youtube.com/watch?v=%s' % data['feed']['entry'][0]['media$group']['yt$videoid']['$t']
-        title = data['feed']['entry'][0]['title']['$t']
-        views = data['feed']['entry'][0]['yt$statistics']['viewCount'] if 'yt$statistics' in data['feed']['entry'][0] else 0
-        likes = float(data['feed']['entry'][0]["yt$rating"]['numLikes']) if "yt$rating" in data['feed']['entry'][0] else 0
-        dislikes = float(data['feed']['entry'][0]["yt$rating"]['numDislikes']) if "yt$rating" in data['feed']['entry'][0] else 0
-        if (likes + dislikes) > 0:
-            rating = '%s%%' % round((likes/(likes+dislikes))*100)
-        else:
-            rating = 'NaN'
-        message = 'Title: %s, Views: %s, Rating: %s -- %s' % (ircutils.bold(title), ircutils.bold(views), ircutils.bold(rating), url)
-        message = message.encode("utf-8", "replace")
-        return message
-
-    def drache(self, irc, msg, args):
-        """
-
-        Neustes Video von Drachenlord1510
-        """
-        message = self._channel_info('drachenlord1510')
-        irc.reply(message)
-
-    def drachenvlog(self, irc, msg, args):
-        """
-
-        Neustes Video von Drachenvlog1510
-        """
-        message = self._channel_info('drachenvlog1510')
-        irc.reply(message)
-
-    def ludger(self, irc, msg, args):
-        """
-
-        Neustes Video von Ludger Winter
-        """
-        message = self._channel_info('UCNqljVvVXoMv9T7dPTvg0JA')
-        irc.reply(message)
-
-    def schmacko(self, irc, msg, args):
-        """
-
-        Neustes Video von ProfSchmackofatz
-        """
-        message = self._channel_info('ProfSchmackofatz')
-        irc.reply(message)
 
 Class = Supytube

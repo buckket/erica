@@ -30,8 +30,8 @@
 ###
 
 """
-This plugin announces the title and other relevent information about any Youtube 
-link that is said in a channel.   
+This plugin announces the title and other relevant information
+about any Youtube or Vimeo link that is said in a channel.
 """
 
 import supybot

@@ -38,29 +38,95 @@ import supybot.ircdb as ircdb
 
 from random import choice
 
+import json
+import requests
+
 
 class KC(callbacks.Plugin):
-    """Misc functionality, related to KC."""
+    """Misc functionality, related to KC or even other Imageboards."""
 
     def jn(self, irc, msg, args):
         """
 
         Randomly choose 'Ja' or 'Nein'
         """
+
         irc.reply(choice(('Ja', 'Nein')))
+
+    def yn(self, irc, msg, args):
+        """
+
+        Randomly choose 'Yes' or 'No'
+        """
+
+        irc.reply(choice(('Yes', 'No')))
 
     def choose(self, irc, msg, args, options):
         """<options>
 
         Randomly chooses one element of <options>
         """
+
         try:
             reply = choice(options)
         except:
             reply = u'Depp.'
         finally:
             irc.reply(reply)
+
     choose = wrap(choose, [many('anything')])
+
+    def _channel_info(self,  channel):
+        r = requests.get('https://gdata.youtube.com/feeds/api/users/{}/uploads?v=2&alt=json&max-results=1'.format(channel))
+        data = json.loads(r.content)
+        url = 'https://www.youtube.com/watch?v=%s' % data['feed']['entry'][0]['media$group']['yt$videoid']['$t']
+        title = data['feed']['entry'][0]['title']['$t']
+        views = data['feed']['entry'][0]['yt$statistics']['viewCount'] if 'yt$statistics' in data['feed']['entry'][0] else 0
+        likes = float(data['feed']['entry'][0]["yt$rating"]['numLikes']) if "yt$rating" in data['feed']['entry'][0] else 0
+        dislikes = float(data['feed']['entry'][0]["yt$rating"]['numDislikes']) if "yt$rating" in data['feed']['entry'][0] else 0
+        if (likes + dislikes) > 0:
+            rating = '%s%%' % round((likes/(likes+dislikes))*100)
+        else:
+            rating = 'NaN'
+        message = 'Title: %s, Views: %s, Rating: %s -- %s' % (ircutils.bold(title), ircutils.bold(views), ircutils.bold(rating), url)
+        message = message.encode("utf-8", "replace")
+        return message
+
+    def drache(self, irc, msg, args):
+        """
+
+        Neustes Video von Drachenlord1510
+        """
+
+        message = self._channel_info('drachenlord1510')
+        irc.reply(message)
+
+    def drachenvlog(self, irc, msg, args):
+        """
+
+        Neustes Video von Drachenvlog1510
+        """
+
+        message = self._channel_info('drachenvlog1510')
+        irc.reply(message)
+
+    def ludger(self, irc, msg, args):
+        """
+
+        Neustes Video von Ludger Winter
+        """
+
+        message = self._channel_info('UCNqljVvVXoMv9T7dPTvg0JA')
+        irc.reply(message)
+
+    def schmacko(self, irc, msg, args):
+        """
+
+        Neustes Video von ProfSchmackofatz
+        """
+
+        message = self._channel_info('ProfSchmackofatz')
+        irc.reply(message)
     
 
 Class = KC
