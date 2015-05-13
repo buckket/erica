@@ -38,11 +38,15 @@ import supybot.ircmsgs as ircmsgs
 import supybot.conf as conf
 import supybot.log as log
 
+from apiclient.discovery import build
+from oauth2client.file import Storage
+
 from urlparse import urlparse
 from datetime import timedelta
 
 import re
 import json
+import httplib2
 import requests
 
 
@@ -59,12 +63,19 @@ class Supytube(callbacks.Plugin):
 
                 m = youtube_pattern.search(msg.args[1]);
                 if(m):
-                    r = requests.get('http://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=json' % m.group(1))
-                    data = json.loads(r.content)
-                    title = data['entry']['title']['$t']
-                    views = data['entry']['yt$statistics']['viewCount'] if 'yt$statistics' in data['entry'] else 0
-                    likes = float(data['entry']["yt$rating"]['numLikes']) if "yt$rating" in data['entry'] else 0
-                    dislikes = float(data['entry']["yt$rating"]['numDislikes']) if "yt$rating" in data['entry'] else 0
+                    storage = Storage(self.registryValue("oauth2CredentialFile")
+                    creds = storage.get()
+                    if creds is None or creds.invalid:
+                        #failed to get credentials...
+                        raise RuntimeError("failed to get google api credentials")
+                    youtube = build('youtube', 'v3', http=creds.authorize(httplib2.Http()))
+                    stats = youtube.videos().list(part="statistics", id=m).execute()
+                    views = stats['items']['viewCount']
+                    likes = float(stats['items']['likeCount'])
+                    dislikes = float(stats['items']['dislikeCount'])
+                    titleobj = youtube.videos().list(part="snippet", id=m).execute()
+                    creds.store()
+                    title = titleobj['items'][0]['snippet']['title']
                     if (likes + dislikes) > 0:
                         rating = '%s%%' % round((likes/(likes+dislikes))*100)
                     else:
