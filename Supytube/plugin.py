@@ -39,14 +39,9 @@ import supybot.conf as conf
 import supybot.log as log
 
 from apiclient.discovery import build
-from oauth2client.file import Storage
-
-from urlparse import urlparse
-from datetime import timedelta
 
 import re
 import json
-import httplib2
 import requests
 
 
@@ -57,41 +52,43 @@ class Supytube(callbacks.Plugin):
 
     def doPrivmsg(self, irc, msg):
         if(self.registryValue('enable', msg.args[0])):
-            # If this is a youtube link, commence lookup
-            if(msg.args[1].find("youtube") != -1 or msg.args[1].find("youtu.be") != -1):
+            if(msg.args[1].find('youtube') != -1 or msg.args[1].find('youtu.be') != -1):
                 youtube_pattern = re.compile('(?:www\.)?youtu(?:be\.com/watch\?v=|\.be/)([\w\?=\-]*)(&(amp;)?[\w\?=]*)?')
 
-                m = youtube_pattern.search(msg.args[1]);
+                m = youtube_pattern.search(msg.args[1])
                 if(m):
-                    storage = Storage(self.registryValue("oauth2CredentialFile")
-                    creds = storage.get()
-                    if creds is None or creds.invalid:
-                        #failed to get credentials...
-                        raise RuntimeError("failed to get google api credentials")
-                    youtube = build('youtube', 'v3', http=creds.authorize(httplib2.Http()))
-                    stats = youtube.videos().list(part="statistics", id=m).execute()
-                    views = stats['items']['viewCount']
-                    likes = float(stats['items']['likeCount'])
-                    dislikes = float(stats['items']['dislikeCount'])
-                    titleobj = youtube.videos().list(part="snippet", id=m).execute()
-                    creds.store()
-                    title = titleobj['items'][0]['snippet']['title']
+                    youtube = build('youtube', 'v3', developerKey=self.registryValue('developerKey'))
+                    data = youtube.videos().list(part='statistics, snippet', id=m.group(1)).execute()
+
+                    try:
+                        statistics = data['items'][0]['statistics']
+                        snippet = data['items'][0]['snippet']
+                    except KeyError, e:
+                        log.error('Supytube._doPrivmsg: %s' % repr(e))
+                        return
+
+                    views = statistics['viewCount']
+                    likes = float(statistics['likeCount'])
+                    dislikes = float(statistics['dislikeCount'])
+                    title = snippet['title']
                     if (likes + dislikes) > 0:
                         rating = '%s%%' % round((likes/(likes+dislikes))*100)
                     else:
                         rating = 'NaN'
+
                     message = 'Title: %s, Views: %s, Rating: %s' % (ircutils.bold(title), ircutils.bold(views), ircutils.bold(rating))
-                    message = message.encode("utf-8", "replace")
+                    message = message.encode('utf-8', 'replace')
                     irc.queueMsg(ircmsgs.privmsg(msg.args[0], message))
 
-            if(msg.args[1].find("vimeo") != -1):
+
+            if(msg.args[1].find('vimeo') != -1):
                 vimeo_pattern = re.compile('vimeo.com/(\\d+)')
-                m = vimeo_pattern.search(msg.args[1]);
+                m = vimeo_pattern.search(msg.args[1])
                 if(m):
-                    r = requests.get("http://vimeo.com/api/v2/video/%s.json" % m.group(1))
+                    r = requests.get('http://vimeo.com/api/v2/video/%s.json' % m.group(1))
                     data = json.loads(r.content)
                     message = 'Title: %s, Views: %s, Likes: %s' % (ircutils.bold(data[0]['title']), ircutils.bold(data[0]['stats_number_of_plays']), ircutils.bold(data[0]['stats_number_of_likes']))
-                    message = message.encode("utf-8", "replace")
+                    message = message.encode('utf-8', 'replace')
                     irc.queueMsg(ircmsgs.privmsg(msg.args[0], message))
 
 

@@ -45,8 +45,8 @@ Supytube = conf.registerPlugin('Supytube')
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(Supytube, 'someConfigVariableName',
 #     registry.Boolean(False, """Help for someConfigVariableName."""))
-conf.registerGlobalValue(Supytube, 'oauth2CredentialFile', 
-    registery.String("credentials.json", """File that contains the required oauth credentials""")
+conf.registerGlobalValue(Supytube, 'developerKey',
+    registry.String('', """Public API access token, obtained via Google Dev Console"""))
 
 # Channel Variables
 conf.registerChannelValue(Supytube, 'enable', registry.Boolean('False', """Enable Supytube in channel?"""))
