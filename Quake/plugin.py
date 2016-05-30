@@ -47,7 +47,15 @@ class Quake(callbacks.Plugin):
         self.players = set()
 
     @staticmethod
-    def _query_server():
+    def _natural_join(lst):
+        l = len(lst)
+        if l <= 2:
+            return ' and '.join(lst)
+        elif l > 2:
+            first = ', '.join(lst[0:-1])
+            return '%s %s %s' % (first, 'and', lst[-1])
+
+    def _query_server(self):
         """Query Q3 server via pyquake3."""
         server = PyQuake3(self.registryValue('queryURL'))
         try:
@@ -56,15 +64,6 @@ class Quake(callbacks.Plugin):
             log.error('Quake.query_server: %s' % repr(e))
             return None
         return server
-
-    @staticmethod
-    def _natural_join(lst):
-        l = len(lst)
-        if l <= 2:
-            return ' and '.join(lst)
-        elif l > 2:
-            first = ', '.join(lst[0:-1])
-            return '%s %s %s' % (first, 'and', lst[-1])
 
     def _poll_event(self):
         """Poll Q3 server for player information."""
