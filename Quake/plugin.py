@@ -63,7 +63,7 @@ class Quake(callbacks.Plugin):
                     announce = u'%s: %s disconnected' % (
                         server.vars['sv_hostname'], self._natural_join(players_disconnected))
                     self._announce(irc, announce)
-                self.players = players_new
+                self.players = players_new.copy()
             else:
                 self.players = set()
 
