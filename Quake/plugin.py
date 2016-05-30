@@ -35,6 +35,7 @@ import supybot.log as log
 import supybot.plugins as plugins
 import supybot.schedule as schedule
 import supybot.utils as utils
+import supybot.world as world
 from supybot.commands import *
 
 from pyquake3 import PyQuake3
@@ -58,12 +59,12 @@ class Quake(callbacks.Plugin):
                 if players_connected:
                     announce = u'%s: %s connected' % (
                         server.vars['sv_hostname'], self._natural_join(players_connected))
-                    self._announce(irc, announce)
+                    self._announce(announce)
                 players_disconnected = self.players - players_new
                 if players_disconnected:
                     announce = u'%s: %s disconnected' % (
                         server.vars['sv_hostname'], self._natural_join(players_disconnected))
-                    self._announce(irc, announce)
+                    self._announce(announce)
                 self.players = players_new.copy()
             else:
                 self.players = set()
@@ -106,12 +107,13 @@ class Quake(callbacks.Plugin):
             return None
         return server
 
-    def _announce(self, irc, message):
-        message = u'%s %s' % (self.registryValue('announcePrefix'), message)
-        message = ircutils.safeArgument(message)
-        for channel in irc.state.channels:
-            if self.registryValue('announce', channel):
-                irc.queueMsg(ircmsgs.privmsg(channel, message))
+    def _announce(self, message):
+        for irc in world.ircs:
+            for channel in irc.state.channels:
+                if self.registryValue('announce', channel):
+                    message = u'%s %s' % (self.registryValue('announcePrefix'), message)
+                    message = ircutils.safeArgument(message)
+                    irc.queueMsg(ircmsgs.privmsg(channel, message))
 
     def q3(self, irc, msg, args):
         """Returns Q3 Arena server information."""
