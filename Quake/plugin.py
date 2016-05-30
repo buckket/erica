@@ -29,6 +29,7 @@
 ###
 
 import supybot.callbacks as callbacks
+import supybot.ircmsgs as ircmsgs
 import supybot.ircutils as ircutils
 import supybot.log as log
 import supybot.plugins as plugins
