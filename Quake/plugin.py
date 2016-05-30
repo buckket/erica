@@ -31,6 +31,7 @@
 import supybot.callbacks as callbacks
 import supybot.ircutils as ircutils
 import supybot.plugins as plugins
+import supybot.schedule as schedule
 import supybot.utils as utils
 from supybot.commands import *
 
