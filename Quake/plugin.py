@@ -28,6 +28,7 @@
 
 ###
 
+import re
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import supybot.ircutils as ircutils
@@ -39,7 +40,6 @@ import supybot.world as world
 from supybot.commands import *
 
 from pyquake3 import PyQuake3
-
 
 # Quake text colors
 # http://openarena.wikia.com/wiki/Manual/Text_colors
