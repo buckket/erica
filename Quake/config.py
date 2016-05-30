@@ -50,3 +50,7 @@ conf.registerChannelValue(Quake, 'announce',
     registry.Boolean(False, """Announce Q3 status on this channel"""))
 conf.registerChannelValue(Quake, 'announcePrefix',
     registry.String('[Q3]', """Prefix for every announment made"""))
+conf.registerGlobalValue(RfK, 'enablePolling',
+    registry.Boolean(False, """Enable polling of the Q3 server"""))
+conf.registerGlobalValue(RfK, 'pollingInterval',
+    registry.PositiveInteger(30, """Interval at which to poll the Q3 server"""))

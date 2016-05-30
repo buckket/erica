@@ -28,11 +28,11 @@
 
 ###
 
+import supybot.callbacks as callbacks
+import supybot.ircutils as ircutils
+import supybot.plugins as plugins
 import supybot.utils as utils
 from supybot.commands import *
-import supybot.plugins as plugins
-import supybot.ircutils as ircutils
-import supybot.callbacks as callbacks
 
 from pyquake3 import PyQuake3
 
@@ -45,6 +45,44 @@ class Quake(callbacks.Plugin):
         self.__parent.__init__(irc)
 
         self.players = set()
+
+        def poll_event():
+            """Poll Q3 server for player information."""
+            server = self._query_server()
+            if server:
+                players_new = set([player.name for player in server.players])
+                players_connected = players_new - self.players
+                if players_connected:
+                    announce = u'%s: %s connected' % (
+                        server.vars['sv_hostname'], self._natural_join(players_connected))
+                    self._announce(irc, announce)
+                players_disconnected = self.players - players_new
+                if players_disconnected:
+                    announce = u'%s: %s disconnected' % (
+                        server.vars['sv_hostname'], self._natural_join(players_disconnected))
+                    self._announce(irc, announce)
+                self.players = players_new
+            else:
+                self.players = set()
+
+        # remove any old events
+        if 'Quake.pollStatus' in schedule.schedule.events:
+            schedule.removePeriodicEvent('Quake.pollStatus')
+
+        # register event
+        if self.registryValue('enablePolling'):
+            schedule.addPeriodicEvent(
+                poll_event,
+                self.registryValue('pollingInterval'),
+                name='Quake.pollStatus'
+            )
+
+    # plugin destructor
+    def die(self):
+        # remove any old events
+        if 'Quake.pollStatus' in schedule.schedule.events:
+            schedule.removePeriodicEvent('Quake.pollStatus')
+        self.__parent.die()
 
     @staticmethod
     def _natural_join(lst):
@@ -64,23 +102,6 @@ class Quake(callbacks.Plugin):
             log.error('Quake.query_server: %s' % repr(e))
             return None
         return server
-
-    def _poll_event(self):
-        """Poll Q3 server for player information."""
-        server = self._query_server()
-        if server:
-            players_new = set([player.name for player in server.players])
-            players_connected = players_new - self.players
-            if players_connected:
-                announce = u'%s: %s connected' % (server.vars['sv_hostname'], self._natural_join(players_connected))
-                self._announce(irc, announce)
-            players_disconnected = self.players - players_new
-            if players_disconnected:
-                announce = u'%s: %s disconnected' % (server.vars['sv_hostname'], self._natural_join(players_disconnected))
-                self._announce(irc, announce)
-            self.players = players_new
-        else:
-            self.players = set()
 
     def _announce(self, irc, message):
         message = u'%s %s' % (self.registryValue('announcePrefix'), message)
