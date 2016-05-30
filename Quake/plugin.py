@@ -41,6 +41,20 @@ from supybot.commands import *
 from pyquake3 import PyQuake3
 
 
+# Quake text colors
+# http://openarena.wikia.com/wiki/Manual/Text_colors
+qcdict = {
+    '1': '4',  # red
+    '2': '3',  # green
+    '3': '8',  # yellow
+    '4': '2',  # blue
+    '5': '10',  # cyan
+    '6': '13',  # magenta
+    '7': '0',  # white
+    '8': '7',  # orange
+}
+
+
 class Quake(callbacks.Plugin):
     """Q3 Arena server information plugin."""
 
@@ -58,12 +72,12 @@ class Quake(callbacks.Plugin):
                 players_connected = players_new - self.players
                 if players_connected:
                     announce = u'%s: %s connected' % (
-                        server.vars['sv_hostname'], self._natural_join(players_connected))
+                        server.vars['sv_hostname'], self._natural_join(map(self._sub_color, players_connected)))
                     self._announce(announce)
                 players_disconnected = self.players - players_new
                 if players_disconnected:
                     announce = u'%s: %s disconnected' % (
-                        server.vars['sv_hostname'], self._natural_join(players_disconnected))
+                        server.vars['sv_hostname'], self._natural_join(map(self._sub_color, players_disconnected)))
                     self._announce(announce)
                 self.players = players_new.copy()
             else:
@@ -97,6 +111,18 @@ class Quake(callbacks.Plugin):
             first = ', '.join(lst[0:-1])
             return '%s %s %s' % (first, 'and', lst[-1])
 
+    @staticmethod
+    def _sub_color(s):
+        def re_sub_color(c, s):
+            if not s:
+                return
+            try:
+                return ircutils.mircColor(s, fg=qcdict[c])
+            except KeyError:
+                return s
+
+        return re.sub(r"\^(\d)([^\^]*)", lambda m: re_sub_color(m.group(1), m.group(2)), s)
+
     def _query_server(self):
         """Query Q3 server via pyquake3."""
         server = PyQuake3(self.registryValue('queryURL'))
@@ -122,9 +148,11 @@ class Quake(callbacks.Plugin):
             reply = u'%s: running map %s with %s player(s)' % (server.vars['sv_hostname'],
                                                                server.vars['mapname'], len(server.players))
             if server.players:
-                reply += u' [ %s ]' % self._natural_join(list(player.name for player in server.players))
+                reply += u' [ %s ]' % self._natural_join(
+                    list(self._sub_color(player.name) for player in server.players))
             irc.reply(reply)
         else:
             irc.reply(u'Failed to query server.')
+
 
 Class = Quake
