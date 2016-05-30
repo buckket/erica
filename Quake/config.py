@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2014-2015, buckket
+# Copyright (c) 2014-2016, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,3 +44,9 @@ Quake = conf.registerPlugin('Quake')
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(Quake, 'someConfigVariableName',
 #     registry.Boolean(False, """Help for someConfigVariableName."""))
+conf.registerGlobalValue(Quake, 'queryURL',
+    registry.String('localhost:27960', """Q3 server query URL"""))
+conf.registerChannelValue(Quake, 'announce',
+    registry.Boolean(False, """Announce Q3 status on this channel"""))
+conf.registerChannelValue(Quake, 'announcePrefix',
+    registry.String('[Q3]', """Prefix for every announment made"""))

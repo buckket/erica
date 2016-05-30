@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2014-2015, buckket
+# Copyright (c) 2014-2016, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,31 +38,68 @@ from pyquake3 import PyQuake3
 
 
 class Quake(callbacks.Plugin):
-    """Returns Q3 Arena server information."""
+    """Q3 Arena server information plugin."""
 
-    def _natural_join(self, lst):
+    def __init__(self, irc):
+        self.__parent = super(Quake, self)
+        self.__parent.__init__(irc)
+
+        self.players = set()
+
+    @staticmethod
+    def _query_server():
+        """Query Q3 server via pyquake3."""
+        server = PyQuake3(self.registryValue('queryURL'))
+        try:
+            server.update()
+        except Exception, e:
+            log.error('Quake.query_server: %s' % repr(e))
+            return None
+        return server
+
+    @staticmethod
+    def _natural_join(lst):
         l = len(lst)
         if l <= 2:
             return ' and '.join(lst)
         elif l > 2:
             first = ', '.join(lst[0:-1])
-            return "%s %s %s" % (first, 'and', lst[-1])
+            return '%s %s %s' % (first, 'and', lst[-1])
+
+    def _poll_event(self):
+        """Poll Q3 server for player information."""
+        server = self._query_server()
+        if server:
+            players_new = set([player.name for player in server.players])
+            players_connected = players_new - self.players
+            if players_connected:
+                announce = u'%s: %s connected' % (server.vars['sv_hostname'], self._natural_join(players_connected))
+                self._announce(irc, announce)
+            players_disconnected = self.players - players_new
+            if players_disconnected:
+                announce = u'%s: %s disconnected' % (server.vars['sv_hostname'], self._natural_join(players_disconnected))
+                self._announce(irc, announce)
+            self.players = players_new
+        else:
+            self.players = set()
+
+    def _announce(self, irc, message):
+        message = u'%s %s' % (self.registryValue('announcePrefix'), message)
+        message = ircutils.safeArgument(message)
+        for channel in irc.state.channels:
+            if self.registryValue('announce', channel):
+                irc.queueMsg(ircmsgs.privmsg(channel, message))
 
     def q3(self, irc, msg, args):
-        """
-
-        Returns Q3 Arena server information
-        """
-
-        server = PyQuake3('localhost:27960')
-        server.update()
-
-        reply = u'%s: running map %s with %s player(s)' % (server.vars['sv_hostname'],
-                server.vars['mapname'], len(server.players))
-
-        if server.players:
-            reply += u' [ %s ]' % self._natural_join(list(player.name for player in server.players))
-
-        irc.reply(reply)
+        """Returns Q3 Arena server information."""
+        server = self._query_server()
+        if server:
+            reply = u'%s: running map %s with %s player(s)' % (server.vars['sv_hostname'],
+                                                               server.vars['mapname'], len(server.players))
+            if server.players:
+                reply += u' [ %s ]' % self._natural_join(list(player.name for player in server.players))
+            irc.reply(reply)
+        else:
+            irc.reply(u'Failed to query server.')
 
 Class = Quake
