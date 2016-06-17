@@ -7,3 +7,6 @@
 [submodule "Twitter"]
 	path = Twitter
 	url = https://github.com/buckket/supybot-twitter.git
+[submodule "Supytube"]
+	path = Supytube
+	url = https://github.com/buckket/supybot-supytube.git
